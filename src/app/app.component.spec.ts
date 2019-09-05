@@ -1,6 +1,8 @@
 import { TestBed, async } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
+import { BoardComponent } from './board/board.component';
+import { BoardService } from './board.service';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
@@ -9,8 +11,12 @@ describe('AppComponent', () => {
         RouterTestingModule
       ],
       declarations: [
-        AppComponent
+        AppComponent,
+        BoardComponent
       ],
+      providers: [
+        BoardService
+      ]
     }).compileComponents();
   }));
 
@@ -20,16 +26,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'hello-angular'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.debugElement.componentInstance;
-    expect(app.title).toEqual('hello-angular');
-  });
-
-  it('should render title in a h1 tag', () => {
+  it('should render title DRAFTS in an h1 element', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.debugElement.nativeElement;
-    expect(compiled.querySelector('h1').textContent).toContain('Welcome to hello-angular!');
+    expect(compiled.querySelector('h1').textContent).toContain('DRAFTS');
+  });
+
+  it(`should have a playing board element`, () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const compiled = fixture.debugElement.nativeElement;
+    expect(compiled.querySelector('app-board')).toBeTruthy();
   });
 });
