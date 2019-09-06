@@ -53,18 +53,18 @@ export class ComputerMoveService {
      * @param availableMoves - an array of legal moves at the disposal of friendly pieces
      */
     const directCaptureAvoidance = (threatsBank: string[], availableMoves: string[]) => {
-      console.log('threats = ' + threatsBank);
       let threatenedPieceCoord: string;
       let landingCoordsAfterCapture: string[];
       for (const threat of threatsBank) {
         const cMoveUnpacker = this.boardService.captureMoveUnpacker(threat);
         threatenedPieceCoord = cMoveUnpacker.victimCoordRaw;
+        console.log('threatenedPieceCoord = ' + threatenedPieceCoord);
         landingCoordsAfterCapture = cMoveUnpacker.finalCoordsRaw;
         console.log('availableMoves = ' + availableMoves);
         console.log('availableMoves.length = ' + availableMoves.length);
         for (const move of availableMoves) {
           for (const landingSpot of landingCoordsAfterCapture) {
-            if (move.includes(landingSpot) && !move.includes(threatenedPieceCoord)) {
+            if (move.includes(landingSpot) && !move.includes(threatenedPieceCoord) && !move.includes('x')) {
                 if (availableMoves.indexOf(move) !== -1) {
                   // This move could protect the endangered piece by blocking the landing cell of
                   // the capturing piece.
@@ -88,7 +88,6 @@ export class ComputerMoveService {
     this.legalMovesCompilation(this.shared.computerPokers, legalMovesBank);
 
     if (legalMovesBank.length > 0) {
-      // console.log('captureMoves = ' + this.shared.captureMoves);
       if (this.shared.captureMoves.length > 0) {
 
         if (this.preferredResponse) {
@@ -100,7 +99,11 @@ export class ComputerMoveService {
             }
           }
         } else {
+
           directCaptureAvoidance(currentThreats, this.shared.captureMoves);
+          console.log('captureMoves = ' + this.shared.captureMoves);
+          console.log('captureMoves.length = ' + this.shared.captureMoves.length);
+          console.log('priorityMoves.length = ' + priorityMoves.length);
           if (priorityMoves.length > 0) {
               // Counter the intended capture by capturing the threatening piece.
               this.forceCapture(priorityMoves[Math.floor(Math.random() * priorityMoves.length)]);
@@ -119,7 +122,6 @@ export class ComputerMoveService {
           priorityMoves.forEach((num) => {
               this.evasiveMoves.push(legalMovesBank[num]);
           });
-          console.log('evasiveMoves = ' + this.evasiveMoves);
 
           const evasiveMovesCopy = this.evasiveMoves.slice(0);
           evasiveMovesCopy.forEach((eMove) => {
@@ -270,7 +272,6 @@ export class ComputerMoveService {
    */
   threats() {
     this.playerHealthAnalysis();
-    console.log('Player captureMoves = ' + this.shared.captureMoves);
     const threats = this.shared.captureMoves.splice(0);
     this.shared.resetCaptureMoves();
     return threats;
@@ -282,6 +283,7 @@ export class ComputerMoveService {
    * @param index - the index of the move to be played in the captureMoves array
    */
   forceCapture(index: number) {
+    console.log('index = ' + index);
     const capString = this.boardService.captureMoveUnpacker(this.shared.captureMoves[index]);
     const [rowInit, colInit] = capString.initCoordinates;
     const [rowFinal, colFinal] = capString.finalCoordsPure[
@@ -316,7 +318,6 @@ export class ComputerMoveService {
         this.preferredResponse = `${rowInit - 1}. ${colInit + 1}:`;
       }
     }
-
 
     this.boardService.board[+rowInit][+colInit].click();
     this.boardService.board[+rowFinal][+colFinal].click();

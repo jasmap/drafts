@@ -49,5 +49,33 @@ describe('ComputerMoveService', () => {
     expect(compMoves.evasiveMoves).toEqual(['6. 3:7. 2,7. 4']);
   });
 
+  it('should detect capture moves even under competing priorities', () => {
+    boardService.board[0][5].setAttribute('id', 'computer-2');
+    boardService.board[0][7].setAttribute('id', 'computer-1');  // mainPiece
+    boardService.board[1][4].setAttribute('id', 'computer-4');
+    boardService.board[2][7].setAttribute('id', 'computer-5');
+    boardService.board[3][6].setAttribute('id', 'computer-6');
+
+    boardService.board[1][6].setAttribute('id', 'player-3');
+    boardService.board[4][7].setAttribute('id', 'player-2');
+    const mainPiece = new Piece('computer-1', 0, 7, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computeriece1 = new Piece('computer-6', 3, 6, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computerPiece2 = new Piece('computer-4', 1, 4, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    const playerPiece1 = new Piece('player-3', 1, 6, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece2 = new Piece('player-2', 4, 7, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    sharedService.computerTurn = true;
+    sharedService.computerPokers = [mainPiece, computeriece1, computerPiece2];
+    sharedService.playerPokers = [playerPiece1, playerPiece2];
+    compMoves.computerMove();
+    expect(sharedService.captureMoves).toEqual(['0. 7:#2. 5xplayer-3']);
+  });
+
+
 
 });
