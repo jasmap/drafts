@@ -11,6 +11,10 @@ import { AttackService } from './attack.service';
 export class ComputerMoveService {
   attackMoves: string[] = [];
   preferredResponse: string;
+  /**
+   * Contains possible defensive moves gleaned from the available moves array
+   */
+  evasiveMoves: string[] = [];
 
   /**
    * A tag signifying that this attacking move will result in multiple possible responses
@@ -49,26 +53,33 @@ export class ComputerMoveService {
      * @param availableMoves - an array of legal moves at the disposal of friendly pieces
      */
     const directCaptureAvoidance = (threatsBank: string[], availableMoves: string[]) => {
+      console.log('threats = ' + threatsBank);
       let threatenedPieceCoord: string;
       let landingCoordsAfterCapture: string[];
       for (const threat of threatsBank) {
         const cMoveUnpacker = this.boardService.captureMoveUnpacker(threat);
         threatenedPieceCoord = cMoveUnpacker.victimCoordRaw;
         landingCoordsAfterCapture = cMoveUnpacker.finalCoordsRaw;
+        console.log('availableMoves = ' + availableMoves);
+        console.log('availableMoves.length = ' + availableMoves.length);
         for (const move of availableMoves) {
           for (const landingSpot of landingCoordsAfterCapture) {
-            if (move.includes(landingSpot)) {
-                // This move could protect the endangered piece by blocking the landing cell of
-                // the capturing piece.
-                priorityMoves.push(availableMoves.indexOf(move));
-                // Replaces the move with a more direct one
-                availableMoves.splice(availableMoves.indexOf(move), 1,
-                  moveAssembler(this.boardService.normalMoveUnpacker(move).initCoordsRaw, landingSpot));
+            if (move.includes(landingSpot) && !move.includes(threatenedPieceCoord)) {
+                if (availableMoves.indexOf(move) !== -1) {
+                  // This move could protect the endangered piece by blocking the landing cell of
+                  // the capturing piece.
+                  priorityMoves.push(availableMoves.indexOf(move));
+                  // Replaces the move with a more direct one
+                  availableMoves.splice(availableMoves.indexOf(move), 1,
+                    moveAssembler(this.boardService.normalMoveUnpacker(move).initCoordsRaw, landingSpot));
+                }
             }
           }
           if (move.includes(threatenedPieceCoord)) {
+            if (availableMoves.indexOf(move) !== -1) {
               // The piece is under fire but can move
               priorityMoves.push(availableMoves.indexOf(move));
+            }
           }
         }
       }
@@ -77,6 +88,7 @@ export class ComputerMoveService {
     this.legalMovesCompilation(this.shared.computerPokers, legalMovesBank);
 
     if (legalMovesBank.length > 0) {
+      // console.log('captureMoves = ' + this.shared.captureMoves);
       if (this.shared.captureMoves.length > 0) {
 
         if (this.preferredResponse) {
@@ -102,15 +114,14 @@ export class ComputerMoveService {
         directCaptureAvoidance(currentThreats, legalMovesBank);
         if (priorityMoves.length > 0) {
 
-          /**
-           * Contains possible defensive moves gleaned from the available moves array
-           */
-          const evasiveMoves = [];
+          this.evasiveMoves = [];
 
           priorityMoves.forEach((num) => {
-              evasiveMoves.push(legalMovesBank[num]);
+              this.evasiveMoves.push(legalMovesBank[num]);
           });
-          const evasiveMovesCopy = evasiveMoves.slice(0);
+          console.log('evasiveMoves = ' + this.evasiveMoves);
+
+          const evasiveMovesCopy = this.evasiveMoves.slice(0);
           evasiveMovesCopy.forEach((eMove) => {
               const nMoveUnpacker = this.boardService.normalMoveUnpacker(eMove);
               const [initRow, initCol] = nMoveUnpacker.initCoordinates;
@@ -119,14 +130,14 @@ export class ComputerMoveService {
                 if (this.movesAnalyser.captureRisk(initRow, initCol, this.boardService.board,
                     this.shared.playerPrefix, finalRow, finalCol)) {
                       // Remove the capture prone move from the list of priority evasive moves
-                      const index = evasiveMoves.indexOf(eMove);
-                      evasiveMoves.splice(index, 1);
+                      const index = this.evasiveMoves.indexOf(eMove);
+                      this.evasiveMoves.splice(index, 1);
                   }
               });
           });
-          if (evasiveMoves.length > 0 && evasiveMoves.length < evasiveMovesCopy.length) {
+          if (this.evasiveMoves.length > 0 && this.evasiveMoves.length < evasiveMovesCopy.length) {
               // Capture prone evasive moves have been filtered out
-              this.monkeyStyle(evasiveMoves);
+              this.monkeyStyle(this.evasiveMoves);
           } else {
               // All attempted evasive moves will result in a capture, so just play any evasive move
               this.monkeyStyle(evasiveMovesCopy);
@@ -259,6 +270,7 @@ export class ComputerMoveService {
    */
   threats() {
     this.playerHealthAnalysis();
+    console.log('Player captureMoves = ' + this.shared.captureMoves);
     const threats = this.shared.captureMoves.splice(0);
     this.shared.resetCaptureMoves();
     return threats;

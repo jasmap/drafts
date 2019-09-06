@@ -66,22 +66,22 @@ export class AttackService {
         arrowBottomEdge = bottomLeft;
         arrowTopEdge = topRight;
         topEdgeParallelAttackProtector = farTopRight;
-        transitCrossAttackCell = leftSibling;
         if (direction === 'parallel') {
           bottomEdgeProtector = farBottomLeft;
         } else if (direction === 'cross') {
           bottomEdgeProtector = bottomSibling;
+          transitCrossAttackCell = leftSibling;
         }
       } else if (pointing === 'left') {
         arrowTip = bottomLeft;
         arrowBottomEdge = bottomRight;
         arrowTopEdge = topLeft;
         topEdgeParallelAttackProtector = farTopLeft;
-        transitCrossAttackCell = rightSibling;
         if (direction === 'parallel') {
           bottomEdgeProtector = farBottomRight;
         } else if (direction === 'cross') {
           bottomEdgeProtector = bottomSibling;
+          transitCrossAttackCell = rightSibling;
         }
       }
 
@@ -99,7 +99,7 @@ export class AttackService {
        * required for a cross attack
        */
       const arrowEdgesCrossAttackCheck = () => {
-        return transitCrossAttackCell === 'isEmpty' && bottomEdgeProtector === 'isEmpty';
+        return transitCrossAttackCell === 'isEmpty' && bottomEdgeProtector === 'isEmpty' && arrowBottomEdge === 'isEnemy';
       };
 
       /**
@@ -397,6 +397,12 @@ export class AttackService {
             attackingFormationCheck() && enemyFormationCheck();
     };
 
+    if (bigLCheck('right', 'down')) {
+      return true;
+    } else if (bigLCheck('left', 'down')) {
+      return true;
+    }
+
     if (arrowHeadCheck('right', 'parallel')) {
       if (negativeDiagonalAttackFormationCheck('parallel')) {
         if (flankingCheck('right', 'parallel')) {
@@ -410,23 +416,29 @@ export class AttackService {
           return true;
         }
       }
+    } else if (arrowHeadCheck('right', 'cross')) {
+     if (positiveDiagonalAttackFormationCheck('cross')) {
+        if (flankingCheck('right', 'cross')) {
+          return true;
+        // TODO: Implement the below else if
+
+        // } else if (crossAttackDoubleResponse('right', 'cross')) {
+        //   this.hasMultiResponses = true;
+        //   return true;
+        }
+      } else if (positiveDiagonalAttackFormationCheck('cross')) {
+        if (flankingCheck('right', 'cross')) {
+          return true;
+        }
+      }
     }
 
-    if (bigLCheck('right', 'down')) {
-      return true;
-    } else if (bigLCheck('left', 'down')) {
-      return true;
-    }
 
     if (arrowHeadCheck('left', 'parallel')) {
-      console.log('Arrowhead Left');
       if (positiveDiagonalAttackFormationCheck('parallel')) {
-        console.log('Attack pos diagonal');
         if (flankingCheck('left', 'parallel')) {
-          console.log('Flanking check left & parallel');
           return true;
         } else if (parallelAttackDoubleResponse('left', 'parallel')) {
-          console.log('Double response Left parallel');
           this.hasMultiResponses = true;
           return true;
         }
@@ -435,7 +447,25 @@ export class AttackService {
           return true;
         }
       }
+    } else if (arrowHeadCheck('left', 'cross')) {
+      if (negativeDiagonalAttackFormationCheck('cross')) {
+        if (flankingCheck('left', 'cross')) {
+          return true;
+
+          // TODO: Implement the below else if
+
+        // } else if (crossAttackDoubleResponse('left', 'cross')) {
+        //     console.log('Double response Left cross');
+        //     this.hasMultiResponses = true;
+        //     return true;
+        }
+      } else if (negativeDiagonalAttackFormationCheck('cross')) {
+        if (flankingCheck('left', 'cross')) {
+          return true;
+        }
+      }
     }
+
     return false;
   }
 }
