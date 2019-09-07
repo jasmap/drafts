@@ -181,6 +181,7 @@ export class AttackService {
       let bottomFlanker: string;
       let bottomFlankerGuard: string;
       let topFlankerGuard: string;
+      let transitCell: string;
 
       if (pointing === 'right') {
         bottomFlanker = leftSibling;
@@ -191,6 +192,7 @@ export class AttackService {
         } else if (direction === 'cross') {
           topFlanker = farTopLeft;
           topFlankerGuard = topLeftSniperS;
+          transitCell = leftSibling;
 
         }
       } else if (pointing === 'left') {
@@ -202,6 +204,7 @@ export class AttackService {
         } else if (direction === 'cross') {
           topFlanker = farTopRight;
           topFlankerGuard = topRightSniperS;
+          transitCell = rightSibling;
         }
       }
 
@@ -220,7 +223,7 @@ export class AttackService {
        * by the baiting piece move
        */
       const crossAttackNoFlankers = () => {
-        return topFlanker === 'isEmpty';
+        return topFlanker === 'isEmpty' && transitCell === 'isEmpty';
       };
 
 
@@ -404,6 +407,7 @@ export class AttackService {
     }
 
     if (arrowHeadCheck('right', 'parallel')) {
+      console.log('arrowHeadCheck, right, parallel');
       if (negativeDiagonalAttackFormationCheck('parallel')) {
         if (flankingCheck('right', 'parallel')) {
           return true;
@@ -412,12 +416,14 @@ export class AttackService {
           return true;
         }
       } else if (positiveDiagonalAttackFormationCheck('cross')) {
+        console.log('positiveDiagonalAttackFormationCheck 1');
         if (flankingCheck('right', 'cross')) {
           return true;
         }
       }
     } else if (arrowHeadCheck('right', 'cross')) {
      if (positiveDiagonalAttackFormationCheck('cross')) {
+        console.log('positiveDiagonalAttackFormationCheck');
         if (flankingCheck('right', 'cross')) {
           return true;
         // TODO: Implement the below else if
@@ -425,10 +431,6 @@ export class AttackService {
         // } else if (crossAttackDoubleResponse('right', 'cross')) {
         //   this.hasMultiResponses = true;
         //   return true;
-        }
-      } else if (positiveDiagonalAttackFormationCheck('cross')) {
-        if (flankingCheck('right', 'cross')) {
-          return true;
         }
       }
     }
@@ -458,10 +460,6 @@ export class AttackService {
         //     console.log('Double response Left cross');
         //     this.hasMultiResponses = true;
         //     return true;
-        }
-      } else if (negativeDiagonalAttackFormationCheck('cross')) {
-        if (flankingCheck('left', 'cross')) {
-          return true;
         }
       }
     }

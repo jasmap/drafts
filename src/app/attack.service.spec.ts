@@ -266,6 +266,31 @@ describe('AttackService', () => {
     expect(compMoves.attackMoves[0]).toContain('4. 7:5. 6');
   });
 
+  it('should not launch a bait attack if it endangers friendly pieces', () => {
+    // boardService.board[0][5].setAttribute('id', 'computer-2');
+    boardService.board[1][6].setAttribute('id', 'computer-3');
+    boardService.board[0][7].setAttribute('id', 'computer-2');
+    boardService.board[2][3].setAttribute('id', 'computer-4');
+    boardService.board[2][5].setAttribute('id', 'computer-1');  // mainPiece
+    boardService.board[2][7].setAttribute('id', 'computer-5');
+    boardService.board[3][4].setAttribute('id', 'computer-6');
+
+    boardService.board[6][7].setAttribute('id', 'player-3');
+    boardService.board[4][7].setAttribute('id', 'player-2');
+    boardService.board[4][5].setAttribute('id', 'player-1');
+    boardService.board[5][6].setAttribute('id', 'player-4');
+    const mainPiece = new Piece('computer-1', 2, 5, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computeriece1 = new Piece('computer-6', 3, 4, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computerPiece2 = new Piece('computer-4', 2, 3, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    sharedService.computerTurn = true;
+    sharedService.computerPokers = [mainPiece, computeriece1, computerPiece2];
+    compMoves.computerMove();
+    expect(compMoves.attackMoves[0]).toEqual(undefined);
+  });
 
 
 
