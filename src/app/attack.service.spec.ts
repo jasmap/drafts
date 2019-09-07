@@ -292,6 +292,36 @@ describe('AttackService', () => {
     expect(compMoves.attackMoves[0]).toEqual(undefined);
   });
 
+  it('should not launch a bait attack if there is no double capturing possible', () => {
+    boardService.board[1][2].setAttribute('id', 'computer-7');
+    boardService.board[1][4].setAttribute('id', 'computer-3');
+    // boardService.board[0][7].setAttribute('id', 'computer-2');
+    boardService.board[2][3].setAttribute('id', 'computer-4');
+    boardService.board[3][2].setAttribute('id', 'computer-1');  // mainPiece
+    boardService.board[2][7].setAttribute('id', 'computer-5');
+    boardService.board[3][4].setAttribute('id', 'computer-6');
+
+    boardService.board[3][0].setAttribute('id', 'player-5');
+    boardService.board[4][5].setAttribute('id', 'player-1');
+    boardService.board[5][0].setAttribute('id', 'player-6');
+    boardService.board[5][2].setAttribute('id', 'player-3');
+    boardService.board[5][4].setAttribute('id', 'player-2');
+    boardService.board[5][6].setAttribute('id', 'player-4');
+    boardService.board[6][3].setAttribute('id', 'player-7');
+    boardService.board[7][2].setAttribute('id', 'player-8');
+
+    const mainPiece = new Piece('computer-1', 3, 2, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computeriece1 = new Piece('computer-6', 1, 4, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computerPiece2 = new Piece('computer-4', 3, 6, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    sharedService.computerTurn = true;
+    sharedService.computerPokers = [mainPiece, computeriece1, computerPiece2];
+    compMoves.computerMove();
+    expect(compMoves.attackMoves[0]).toEqual(undefined);
+  });
 
 
 

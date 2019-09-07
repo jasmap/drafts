@@ -182,6 +182,12 @@ export class AttackService {
       let bottomFlankerGuard: string;
       let topFlankerGuard: string;
       let transitCell: string;
+      let bottomEdgeProtector: string;
+      let arrowBottomEdge: string;
+      let crossFireSeriesGuard: string;
+      let crossFireSeries: string;
+      let crossFireTop: string;
+      let crossFireTopGuard: string;
 
       if (pointing === 'right') {
         bottomFlanker = leftSibling;
@@ -193,6 +199,12 @@ export class AttackService {
           topFlanker = farTopLeft;
           topFlankerGuard = topLeftSniperS;
           transitCell = leftSibling;
+          bottomEdgeProtector = bottomSibling;
+          arrowBottomEdge = bottomLeft;
+          crossFireSeries = bottomLeftSniperL1;
+          crossFireSeriesGuard = bottomLeftSniperL1Attacker;
+          crossFireTop = topLeftSniperL1;
+          crossFireTopGuard = topLeftSniperL1Attacker;
 
         }
       } else if (pointing === 'left') {
@@ -205,6 +217,13 @@ export class AttackService {
           topFlanker = farTopRight;
           topFlankerGuard = topRightSniperS;
           transitCell = rightSibling;
+          bottomEdgeProtector = bottomSibling;
+          arrowBottomEdge = bottomRight;
+          crossFireSeries = bottomRightSniperL1;
+          crossFireSeriesGuard =  bottomRightSniperL1Attacker;
+          crossFireTop = topRightSniperL1;
+          crossFireTopGuard = topRightSniperL1Attacker;
+
         }
       }
 
@@ -283,6 +302,18 @@ export class AttackService {
         (bottomFlankerGuard === 'isFriend' || bottomFlankerGuard === undefined));
       };
 
+      /**
+       * Checks for the availability of transit and final landing positions
+       * required for a cross attack
+       */
+      const crossTransitAndFinalPosCheck = () => {
+        return transitCell === 'isEmpty' && (
+          (bottomEdgeProtector === 'isEmpty' && arrowBottomEdge === 'isEnemy') ||
+          (crossFireSeries === 'isEnemy' && crossFireSeriesGuard === 'isEmpty') ||
+          (crossFireTop === 'isEnemy' && crossFireTopGuard === 'isEmpty')
+          );
+      };
+
       if (direction === 'parallel') {
         return parallelAttackNoFlankers() ||
               parallelAttackFriendlyFlankers() ||
@@ -290,7 +321,7 @@ export class AttackService {
               parallelAttackBaitFired() ||
               parallelAttackMixedFlankers();
       } else if (direction === 'cross') {
-        return crossAttackNoFlankers() || crossAttackBaitFired();
+        return crossTransitAndFinalPosCheck() && (crossAttackNoFlankers() || crossAttackBaitFired());
       }
     };
 
