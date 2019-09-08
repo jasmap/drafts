@@ -4,6 +4,11 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class MovesAnalyserService {
+  kingSuffix = 'King';
+  isEnemy = 'isEnemy';
+  isFriend = 'isFriend';
+  isEnemyKing = 'isEnemyKing';
+  isFriendKing = 'isFriendKing';
 
   constructor() {}
 
@@ -14,18 +19,40 @@ export class MovesAnalyserService {
     const thisCell = board[row][col];
     let status: string;
     if (thisCell.hasAttribute('id')) {
-        if (thisCell.getAttribute('id').includes(enemyPrefix)) {
-            status = 'isEnemy';
-        } else if (initRow === row && initCol === col) {
-            // This means the computer piece will move from this cell, leaving it empty
-            status = 'isEmpty';
+      const id = thisCell.getAttribute('id');
+      if (id.includes(enemyPrefix)) {
+        if (id.includes(this.kingSuffix)) {
+          status = this.isEnemyKing;
         } else {
-            status = 'isFriend';
+          status = this.isEnemy;
         }
-    } else {
+      } else if (initRow === row && initCol === col) {
+        // This means the computer piece will move from this cell, leaving it empty
         status = 'isEmpty';
+      } else {
+        if (id.includes(this.kingSuffix)) {
+          status = this.isFriendKing;
+        } else {
+          status = this.isFriend;
+        }
+      }
+    } else {
+      status = 'isEmpty';
     }
     return status;
+  }
+
+  /**
+   * Checks is a given cell is occupied by aking piece
+   */
+  kingCheck(row: number, col: number, board: any[]) {
+    const thisCell = board[row][col];
+    if (thisCell.hasAttribute('id')) {
+      if (thisCell.getAttribute('id').includes(this.kingSuffix)) {
+        return true;
+      }
+      return false;
+    }
   }
 
   /**
@@ -40,7 +67,7 @@ export class MovesAnalyserService {
     colY = col + 1;
     while ( rowX >= 0 && colY <= 7) {
       const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-      if (cellStatus === 'isEnemy') {
+      if (cellStatus === this.isEnemy) {
           if ( rowX - 1 >= 0 && colY + 1 <= 7) {
               // Victim piece not on edge of board
               if (this.cellOwnerChecking( rowX - 1, colY + 1, board, enemyPrefix) === 'isEmpty') {
@@ -49,7 +76,7 @@ export class MovesAnalyserService {
                   return true;
               }
           }
-      } else if (cellStatus === 'isFriend') {
+      } else if (cellStatus === this.isFriend) {
           // Friendly piece, stop querying
           return false;
       }
@@ -72,7 +99,7 @@ export class MovesAnalyserService {
       colY = col - 1;
       while ( rowX <= 7 && colY >= 0) {
           const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-          if (cellStatus === 'isEnemy') {
+          if (cellStatus === this.isEnemy) {
               // Victim piece must not be on edge of board
               if ( rowX + 1 <= 7 && colY - 1 >= 0) {
                   if (this.cellOwnerChecking( rowX + 1, colY - 1, board, enemyPrefix) === 'isEmpty') {
@@ -81,7 +108,7 @@ export class MovesAnalyserService {
                       return true;
                   }
               }
-          } else if (cellStatus === 'isFriend') {
+          } else if (cellStatus === this.isFriend) {
               // Friendly piece, stop querying
               return false;
           }
@@ -105,7 +132,7 @@ export class MovesAnalyserService {
       colY = col - 1;
       while ( rowX >= 0 && colY >= 0) {
           const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-          if (cellStatus === 'isEnemy') {
+          if (cellStatus === this.isEnemy) {
               // Victim piece must not be on edge of board
               if ( rowX - 1 >= 0 && colY - 1 >= 0) {
                   if (this.cellOwnerChecking( rowX - 1, colY - 1, board, enemyPrefix) === 'isEmpty') {
@@ -114,7 +141,7 @@ export class MovesAnalyserService {
                       return true;
                   }
               }
-          } else if (cellStatus === 'isFriend') {
+          } else if (cellStatus === this.isFriend) {
               // Friendly piece, stop querying
               return false;
           }
@@ -137,7 +164,7 @@ export class MovesAnalyserService {
       colY = col + 1;
       while ( rowX <= 7 && colY <= 7) {
           const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-          if (cellStatus === 'isEnemy') {
+          if (cellStatus === this.isEnemy) {
               // Victim piece must not be on edge of board
               if ( rowX + 1 <= 7 && colY + 1 <= 7) {
                   if (this.cellOwnerChecking( rowX + 1, colY + 1, board, enemyPrefix) === 'isEmpty') {
@@ -146,7 +173,7 @@ export class MovesAnalyserService {
                       return true;
                   }
               }
-          } else if (cellStatus === 'isFriend') {
+          } else if (cellStatus === this.isFriend) {
               // Friendly piece, stop querying
               return false;
           }
@@ -179,45 +206,45 @@ export class MovesAnalyserService {
    * Spies and returns the status of the botom-left cell of the given coordinates.
    */
   bottomLeftCell( row: number, col: number, board: any[], enemyPrefix: string) {
-      let status: string;
-      // Piece not on left edge of board
-      if (col > 0) {
-          // Piece not on the bottom edge of board, check bottom left
-          if (row < 7) {
-              status = this.cellOwnerChecking(row + 1, col - 1, board, enemyPrefix);
-          }
+    let status: string;
+    // Piece not on left edge of board
+    if (col > 0) {
+      // Piece not on the bottom edge of board, check bottom left
+      if (row < 7) {
+        status = this.cellOwnerChecking(row + 1, col - 1, board, enemyPrefix);
       }
-      return status;
+    }
+    return status;
   }
 
   /**
    * Spies and returns the status of the botom-right cell of the given coordinates.
    */
   bottomRightCell( row: number, col: number, board: any[], enemyPrefix: string) {
-      let status: string;
-      // Piece not on right edge of board
-      if (col < 7) {
-          // Piece not on the bottom edge of board, check bottom right
-          if (row < 7) {
-              status = this.cellOwnerChecking(row + 1, col + 1, board, enemyPrefix);
-          }
+    let status: string;
+    // Piece not on right edge of board
+    if (col < 7) {
+      // Piece not on the bottom edge of board, check bottom right
+      if (row < 7) {
+        status = this.cellOwnerChecking(row + 1, col + 1, board, enemyPrefix);
       }
-      return status;
+    }
+    return status;
   }
 
   /**
    * Spies and returns the status of the top-left cell of the given coordinates.
    */
   topLeftCell(row: number, col: number, board: any[], enemyPrefix: string, initRow: number = null, initCol: number = null) {
-      let status: string;
-      // Piece not on left edge of board
-      if (col > 0) {
-          // Piece not on the top edge of board, check top left
-          if (row > 0) {
-              status = this.cellOwnerChecking(row - 1, col - 1, board, enemyPrefix, initRow, initCol);
-          }
-      }
-      return status;
+		let status: string;
+		// Piece not on left edge of board
+		if (col > 0) {
+			// Piece not on the top edge of board, check top left
+			if (row > 0) {
+				status = this.cellOwnerChecking(row - 1, col - 1, board, enemyPrefix, initRow, initCol);
+			}
+		}
+		return status;
   }
 
   /**
@@ -353,10 +380,10 @@ export class MovesAnalyserService {
       const bottomRight = this.bottomRightCell(finalRow, finalCol, board, enemyPrefix);
       const topRight = this.topRightCell(finalRow, finalCol, board, enemyPrefix, initRow, initCol);
 
-      if ((topLeft === 'isEmpty' && bottomRight === 'isEnemy') ||
-          (topRight === 'isEmpty' && bottomLeft === 'isEnemy') ||
-          (bottomRight === 'isEmpty' && topLeft === 'isEnemy') ||
-          (bottomLeft === 'isEmpty' && topRight === 'isEnemy')) {
+      if ((topLeft === 'isEmpty' && bottomRight === this.isEnemy) ||
+          (topRight === 'isEmpty' && bottomLeft === this.isEnemy) ||
+          (bottomRight === 'isEmpty' && topLeft === this.isEnemy) ||
+          (bottomLeft === 'isEmpty' && topRight === this.isEnemy)) {
           // The piece will be captured if it makes this move
           return true;
       } else {
@@ -381,18 +408,18 @@ export class MovesAnalyserService {
           const bottomRightSniperS = this.bottomRightSniperSCell(finalRow, finalCol, board, enemyPrefix);
           const topLeftSniperS = this.topLeftSniperSCell(finalRow, finalCol, board, enemyPrefix);
 
-          if ((bottomRightSniperL1 === 'isEnemy' && rightSibling === 'isFriend' && topRight === 'isEmpty') ||
-              (bottomLeftSniperL1 === 'isEnemy' && leftSibling === 'isFriend' && topLeft === 'isEmpty') ||
-              (topLeftSniperL1 === 'isEnemy' && rightSibling === 'isFriend' && bottomRight === 'isEmpty') ||
-              (topRightSniperL1 === 'isEnemy' && leftSibling === 'isFriend' && bottomLeft === 'isEmpty') ||
-              (bottomRightSniperL2 === 'isEnemy' && bottomSibling === 'isFriend' && bottomLeft === 'isEmpty') ||
-              (bottomLeftSniperL2 === 'isEnemy' && bottomSibling === 'isFriend' && bottomRight === 'isEmpty') ||
-              (topRightSniperL2 === 'isEnemy' && topSibling === 'isFriend' && topLeft === 'isEmpty') ||
-              (topLeftSniperL2 === 'isEnemy' && topSibling === 'isFriend' && topRight === 'isEmpty') ||
-              (topRightSniperS === 'isEnemy' && farTopRight === 'isFriend' && topRight === 'isEmpty') ||
-              (bottomLeftSniperS === 'isEnemy' && farBottomLeft === 'isFriend' && bottomLeft === 'isEmpty') ||
-              (bottomRightSniperS === 'isEnemy' && farBottomRight === 'isFriend' && bottomRight === 'isEmpty') ||
-              (topLeftSniperS === 'isEnemy' && farTopLeft === 'isFriend' && topLeft === 'isEmpty')) {
+          if ((bottomRightSniperL1 === this.isEnemy && rightSibling === this.isFriend && topRight === 'isEmpty') ||
+              (bottomLeftSniperL1 === this.isEnemy && leftSibling === this.isFriend && topLeft === 'isEmpty') ||
+              (topLeftSniperL1 === this.isEnemy && rightSibling === this.isFriend && bottomRight === 'isEmpty') ||
+              (topRightSniperL1 === this.isEnemy && leftSibling === this.isFriend && bottomLeft === 'isEmpty') ||
+              (bottomRightSniperL2 === this.isEnemy && bottomSibling === this.isFriend && bottomLeft === 'isEmpty') ||
+              (bottomLeftSniperL2 === this.isEnemy && bottomSibling === this.isFriend && bottomRight === 'isEmpty') ||
+              (topRightSniperL2 === this.isEnemy && topSibling === this.isFriend && topLeft === 'isEmpty') ||
+              (topLeftSniperL2 === this.isEnemy && topSibling === this.isFriend && topRight === 'isEmpty') ||
+              (topRightSniperS === this.isEnemy && farTopRight === this.isFriend && topRight === 'isEmpty') ||
+              (bottomLeftSniperS === this.isEnemy && farBottomLeft === this.isFriend && bottomLeft === 'isEmpty') ||
+              (bottomRightSniperS === this.isEnemy && farBottomRight === this.isFriend && bottomRight === 'isEmpty') ||
+              (topLeftSniperS === this.isEnemy && farTopLeft === this.isFriend && topLeft === 'isEmpty')) {
               // This move will leave friend to be captured
               return true;
           }

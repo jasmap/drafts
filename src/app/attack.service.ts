@@ -43,6 +43,8 @@ export class AttackService {
     const bottomRightSniperL1Attacker = this.movesAnalyser.bottomRightSniperL1AttackerCell(finalRow, finalCol, board, enemyPrefix);
     const bottomLeftSniperL1Attacker = this.movesAnalyser.bottomLeftSniperL1AttackerCell(finalRow, finalCol, board, enemyPrefix);
 
+    const bottomLeftIsKing = this.movesAnalyser.kingCheck(finalRow + 1, finalCol - 1, board);
+
     this.hasMultiResponses = false;
 
     /**
@@ -321,6 +323,7 @@ export class AttackService {
               parallelAttackBaitFired() ||
               parallelAttackMixedFlankers();
       } else if (direction === 'cross') {
+        // console.log('crossTransitAndFinalPosCheck()');
         return crossTransitAndFinalPosCheck() && (crossAttackNoFlankers() || crossAttackBaitFired());
       }
     };
@@ -379,6 +382,12 @@ export class AttackService {
       let seriesCrossFire: string;
       let seriesCrossFireGuard: string;
       let baitSpoilerCell: string;
+      /**
+       * The cell that block the tempted piece from propagating it's moves.
+       * The tempted piece must have only one legal landing position after
+       * capturing the baited piece.
+       */
+      let restrictorCell: string;
 
       responder = topSibling;
 
@@ -393,6 +402,7 @@ export class AttackService {
         seriesCrossFire = bottomRightSniperL1;
         seriesCrossFireGuard = bottomRightSniperL1Attacker;
         baitSpoilerCell = bottomRight;
+        restrictorCell = farTopRight;
 
       } else if (baitDirection === 'left') {
         cornerL = topRight;
@@ -405,6 +415,7 @@ export class AttackService {
         seriesCrossFire = bottomLeftSniperL1;
         seriesCrossFireGuard = bottomLeftSniperL1Attacker;
         baitSpoilerCell = bottomLeft;
+        restrictorCell = farTopLeft;
 
       }
 
@@ -426,12 +437,18 @@ export class AttackService {
             (seriesCrossFire === 'isEnemy' && seriesCrossFireGuard === 'isEmpty'));
       };
 
+      const restictorCellCheck = () => {
+
+        return
+      };
+
       return transitCell === 'isEmpty' &&
             (baitSpoilerCell === 'isEmpty' || baitSpoilerCell === 'isFriend') &&
             attackingFormationCheck() && enemyFormationCheck();
     };
 
     if (bigLCheck('right', 'down')) {
+      console.log('bigL, right, down');
       return true;
     } else if (bigLCheck('left', 'down')) {
       return true;
@@ -453,7 +470,8 @@ export class AttackService {
         }
       }
     } else if (arrowHeadCheck('right', 'cross')) {
-     if (positiveDiagonalAttackFormationCheck('cross')) {
+      console.log('arrowHeadCheck right cross');
+      if (positiveDiagonalAttackFormationCheck('cross')) {
         console.log('positiveDiagonalAttackFormationCheck');
         if (flankingCheck('right', 'cross')) {
           return true;
@@ -468,6 +486,7 @@ export class AttackService {
 
 
     if (arrowHeadCheck('left', 'parallel')) {
+      console.log('arrowHeadCheck left parallel');
       if (positiveDiagonalAttackFormationCheck('parallel')) {
         if (flankingCheck('left', 'parallel')) {
           return true;
@@ -481,6 +500,7 @@ export class AttackService {
         }
       }
     } else if (arrowHeadCheck('left', 'cross')) {
+      console.log('arrowHeadCheck left cross');
       if (negativeDiagonalAttackFormationCheck('cross')) {
         if (flankingCheck('left', 'cross')) {
           return true;
