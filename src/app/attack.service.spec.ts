@@ -11,7 +11,7 @@ import { BoardComponent } from './board/board.component';
 describe('AttackService', () => {
   const sharedService = new SharedService();
   const movesAnalyser = new MovesAnalyserService();
-  const attack = new AttackService(movesAnalyser);
+  const attack = new AttackService(movesAnalyser, sharedService);
   const boardService = new BoardService(movesAnalyser, sharedService);
   const compMoves = new ComputerMoveService(sharedService, movesAnalyser, boardService, attack);
 

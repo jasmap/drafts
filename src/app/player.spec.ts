@@ -19,7 +19,7 @@ describe('PlayerClass', () => {
   const sharedService = new SharedService();
   const movesAnalyser = new MovesAnalyserService();
   const cellsService = new BoardService(movesAnalyser, sharedService);
-  const attack = new AttackService(movesAnalyser);
+  const attack = new AttackService(movesAnalyser, sharedService);
   const compMove = new ComputerMoveService(sharedService, movesAnalyser, cellsService, attack);
 
 

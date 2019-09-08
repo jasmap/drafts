@@ -2,7 +2,6 @@ import { SharedService } from './shared.service';
 import { BoardService } from './board.service';
 import { MovesAnalyserService } from './moves-analyser.service';
 import { ComputerMoveService } from './computer-move.service';
-import { AttackService } from './attack.service';
 
 export class Piece {
   constructor(public id: string, private row: number, private col: number,
@@ -29,7 +28,7 @@ export class Piece {
        * Checks for capturing opportunities pependicular to a given direction
        */
       const crossCaptureSpy = (row: number, col: number, board: number[], enemyPrefix: string, direction: string) => {
-          if (this.movesAnalyser.cellOwnerChecking(row, col, board, enemyPrefix) === 'isEmpty') {
+          if (this.movesAnalyser.cellOwnerChecking(row, col, board, enemyPrefix) === this.movesAnalyser.isEmpty) {
             if (direction === 'neg') {
               return this.movesAnalyser.negativeDiagonalSpy(row, col, board, enemyPrefix);
             } else if (direction === 'pos') {
@@ -44,17 +43,19 @@ export class Piece {
       colY = this.col + 1;
       while (rowX >= 0 && colY <= 7) {
           const cellStatus = this.movesAnalyser.cellOwnerChecking(rowX, colY, this.cellsService.board, victimPrefix);
-          if (cellStatus === 'isEmpty') {
+          if (cellStatus === this.movesAnalyser.isEmpty) {
               if (this.sharedService.captureMoves.length === 0) {
                   movesContainer.push(`${rowX}. ${colY}`);
               }
 
           } else {
               const rightForkId = this.cellsService.board[rowX][colY].getAttribute('id');
-              if (cellStatus === 'isEnemy') {
+              if (cellStatus.includes(this.movesAnalyser.isEnemy)) {
                   // Victim piece must not be on edge of board
                   if (rowX - 1 >= 0 && colY + 1 <= 7) {
-                      if (this.movesAnalyser.cellOwnerChecking(rowX - 1, colY + 1, this.cellsService.board, victimPrefix) === 'isEmpty') {
+                      if (this.movesAnalyser.cellOwnerChecking(
+                        rowX - 1, colY + 1, this.cellsService.board, victimPrefix) === this.movesAnalyser.isEmpty
+                        ) {
                           // Empty cell behind the victim piece
                           // Build possible landing positions beyond the victim piece
                           let innerRow = rowX - 1;
@@ -78,7 +79,7 @@ export class Piece {
                           while (innerRow >= 0 && innerCol <= 7) {
 
                               if (this.movesAnalyser.cellOwnerChecking(innerRow, innerCol, this.cellsService.board,
-                                victimPrefix) === 'isEmpty') {
+                                victimPrefix) === this.movesAnalyser.isEmpty) {
                                   if (this.movesAnalyser.forwardRightSpy(innerRow, innerCol, this.cellsService.board, victimPrefix) ||
                                       !crossCapture) {
 

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { MovesAnalyserService } from './moves-analyser.service';
+import { SharedService } from './shared.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,39 +14,53 @@ export class AttackService {
    */
   hasMultiResponses: boolean;
 
-  constructor(private movesAnalyser: MovesAnalyserService) { }
+  constructor(private moves: MovesAnalyserService, private shared: SharedService) { }
 
   frontalBait = (finalRow: number, finalCol: number, board: any[], enemyPrefix: string, initRow: number, initCol: number) => {
-    const bottomLeft = this.movesAnalyser.bottomLeftCell(finalRow, finalCol, board, enemyPrefix);
-    const topLeft = this.movesAnalyser.topLeftCell(finalRow, finalCol, board, enemyPrefix, initRow, initCol);
-    const bottomRight = this.movesAnalyser.bottomRightCell(finalRow, finalCol, board, enemyPrefix);
-    const topRight = this.movesAnalyser.topRightCell(finalRow, finalCol, board, enemyPrefix, initRow, initCol);
-    const farTopLeft = this.movesAnalyser.farTopLeftCell(finalRow, finalCol, board, enemyPrefix);
-    const farBottomRight = this.movesAnalyser.farBottomRightCell(finalRow, finalCol, board, enemyPrefix);
-    const farTopRight = this.movesAnalyser.farTopRightCell(finalRow, finalCol, board, enemyPrefix);
-    const topRightSniperS = this.movesAnalyser.topRightSniperSCell(finalRow, finalCol, board, enemyPrefix);
-    const rightSibling = this.movesAnalyser.rightSiblingCell(finalRow, finalCol, board, enemyPrefix);
-    const topSibling = this.movesAnalyser.topSiblingCell(finalRow, finalCol, board, enemyPrefix);
-    const bottomSibling = this.movesAnalyser.bottomSiblingCell(finalRow, finalCol, board, enemyPrefix);
-    const bottomRightSniperL1 = this.movesAnalyser.bottomRightSniperL1Cell(finalRow, finalCol, board, enemyPrefix);
-    const topLeftSniperL2 = this.movesAnalyser.topLeftSniperL2Cell(finalRow, finalCol, board, enemyPrefix);
-    const topLeftSniperS = this.movesAnalyser.topLeftSniperSCell(finalRow, finalCol, board, enemyPrefix);
-    const leftSibling = this.movesAnalyser.leftSiblingCell(finalRow, finalCol, board, enemyPrefix);
-    const bottomLeftSniperL1 = this.movesAnalyser.bottomLeftSniperL1Cell(finalRow, finalCol, board, enemyPrefix);
-    const topRightSniperL2 = this.movesAnalyser.topRightSniperL2Cell(finalRow, finalCol, board, enemyPrefix);
-    const farBottomLeft = this.movesAnalyser.farBottomLeftCell(finalRow, finalCol, board, enemyPrefix);
-    const topRightSniperL1 = this.movesAnalyser.topRightSniperL1Cell(finalRow, finalCol, board, enemyPrefix);
-    const topLeftSniperL1 = this.movesAnalyser.topLeftSniperL1Cell(finalRow, finalCol, board, enemyPrefix);
-    const topLeftSniperL3 = this.movesAnalyser.topLeftSniperL3Cell(finalRow, finalCol, board, enemyPrefix);
-    const topRightSniperL3 = this.movesAnalyser.topRightSniperL3Cell(finalRow, finalCol, board, enemyPrefix);
-    const topRightSniperL1Attacker = this.movesAnalyser.topRightSniperL1AttackerCell(finalRow, finalCol, board, enemyPrefix);
-    const topLeftSniperL1Attacker = this.movesAnalyser.topLeftSniperL1AttackerCell(finalRow, finalCol, board, enemyPrefix);
-    const bottomRightSniperL1Attacker = this.movesAnalyser.bottomRightSniperL1AttackerCell(finalRow, finalCol, board, enemyPrefix);
-    const bottomLeftSniperL1Attacker = this.movesAnalyser.bottomLeftSniperL1AttackerCell(finalRow, finalCol, board, enemyPrefix);
+    const moves = this.moves;
+    const shared = this.shared;
 
-    const bottomLeftIsKing = this.movesAnalyser.kingCheck(finalRow + 1, finalCol - 1, board);
+    const bottomLeft = moves.bottomLeftCell(finalRow, finalCol, board, enemyPrefix);
+    const topLeft = moves.topLeftCell(finalRow, finalCol, board, enemyPrefix, initRow, initCol);
+    const bottomRight = moves.bottomRightCell(finalRow, finalCol, board, enemyPrefix);
+    const topRight = moves.topRightCell(finalRow, finalCol, board, enemyPrefix, initRow, initCol);
+    const farTopLeft = moves.farTopLeftCell(finalRow, finalCol, board, enemyPrefix);
+    const farBottomRight = moves.farBottomRightCell(finalRow, finalCol, board, enemyPrefix);
+    const farTopRight = moves.farTopRightCell(finalRow, finalCol, board, enemyPrefix);
+    const topRightSniperS = moves.topRightSniperSCell(finalRow, finalCol, board, enemyPrefix);
+    const rightSibling = moves.rightSiblingCell(finalRow, finalCol, board, enemyPrefix);
+    const topSibling = moves.topSiblingCell(finalRow, finalCol, board, enemyPrefix);
+    const bottomSibling = moves.bottomSiblingCell(finalRow, finalCol, board, enemyPrefix);
+    const bottomRightSniperL1 = moves.bottomRightSniperL1Cell(finalRow, finalCol, board, enemyPrefix);
+    const topLeftSniperL2 = moves.topLeftSniperL2Cell(finalRow, finalCol, board, enemyPrefix);
+    const topLeftSniperS = moves.topLeftSniperSCell(finalRow, finalCol, board, enemyPrefix);
+    const leftSibling = moves.leftSiblingCell(finalRow, finalCol, board, enemyPrefix);
+    const bottomLeftSniperL1 = moves.bottomLeftSniperL1Cell(finalRow, finalCol, board, enemyPrefix);
+    const topRightSniperL2 = moves.topRightSniperL2Cell(finalRow, finalCol, board, enemyPrefix);
+    const farBottomLeft = moves.farBottomLeftCell(finalRow, finalCol, board, enemyPrefix);
+    const topRightSniperL1 = moves.topRightSniperL1Cell(finalRow, finalCol, board, enemyPrefix);
+    const topLeftSniperL1 = moves.topLeftSniperL1Cell(finalRow, finalCol, board, enemyPrefix);
+    const topLeftSniperL3 = moves.topLeftSniperL3Cell(finalRow, finalCol, board, enemyPrefix);
+    const topRightSniperL3 = moves.topRightSniperL3Cell(finalRow, finalCol, board, enemyPrefix);
+    const topRightSniperL1Attacker = moves.topRightSniperL1AttackerCell(finalRow, finalCol, board, enemyPrefix);
+    const topLeftSniperL1Attacker = moves.topLeftSniperL1AttackerCell(finalRow, finalCol, board, enemyPrefix);
+    const bottomRightSniperL1Attacker = moves.bottomRightSniperL1AttackerCell(finalRow, finalCol, board, enemyPrefix);
+    const bottomLeftSniperL1Attacker = moves.bottomLeftSniperL1AttackerCell(finalRow, finalCol, board, enemyPrefix);
+
+    const isEmpty: string = moves.isEmpty;
+    const isEnemy: string = moves.isEnemy;
+    const isFriend: string = moves.isFriend;
+    const isEnemyKing: string = moves.isEnemyKing;
+    const isFriendKing: string = moves.isFriendKing;
+    const kingSuffix: string = moves.kingSuffix;
 
     this.hasMultiResponses = false;
+
+    // Essential coordinates
+    const topLeftRow = finalRow - 1;
+    const topLeftCol = finalCol - 1;
+    const topRightRow = finalRow - 1;
+    const topRightCol = finalCol + 1;
 
     /**
      * Checks for the signature arrow-head formation,
@@ -92,8 +107,8 @@ export class AttackService {
        * required for a parallel attack
        */
       const arrowEdgesParallelAttackCheck = () => {
-        return (arrowBottomEdge === 'isEnemy' && bottomEdgeProtector === 'isEmpty') ||
-              (arrowTopEdge === 'isEnemy' && topEdgeParallelAttackProtector === 'isEmpty');
+        return (arrowBottomEdge.includes(isEnemy) && bottomEdgeProtector === isEmpty) ||
+              (arrowTopEdge.includes(isEnemy) && topEdgeParallelAttackProtector === isEmpty);
       };
 
       /**
@@ -101,7 +116,9 @@ export class AttackService {
        * required for a cross attack
        */
       const arrowEdgesCrossAttackCheck = () => {
-        return transitCrossAttackCell === 'isEmpty' && bottomEdgeProtector === 'isEmpty' && arrowBottomEdge === 'isEnemy';
+        return transitCrossAttackCell === isEmpty &&
+          bottomEdgeProtector === isEmpty &&
+          arrowBottomEdge.includes(isEnemy);
       };
 
       /**
@@ -115,8 +132,8 @@ export class AttackService {
         }
       };
 
-
-      return arrowTip === 'isEnemy' && arrowBottomEdge !== 'isEmpty' && arrowTopEdge !== 'isEmpty' && attackDirection();
+      return (arrowTip !== undefined && arrowTip.includes(isEnemy)) &&
+              arrowBottomEdge !== isEmpty && arrowTopEdge !== isEmpty && attackDirection();
     };
 
     /**
@@ -141,8 +158,8 @@ export class AttackService {
         supporter = topSibling;
         sniper = topLeftSniperL2;
       }
-      return initialSpot === 'isEmpty' && supporter === 'isFriend' &&
-      (sniper === 'isFriend' || sniper === undefined);
+      return initialSpot === isEmpty && supporter.includes(isFriend) &&
+      (sniper === undefined || sniper.includes(isFriend));
     };
 
     /**
@@ -167,8 +184,8 @@ export class AttackService {
         supporter = topSibling;
         sniper = topRightSniperL2;
       }
-      return initialSpot === 'isEmpty' && supporter === 'isFriend' &&
-      (sniper === 'isFriend' || sniper === undefined);
+      return initialSpot === isEmpty && supporter.includes(isFriend) &&
+      (sniper === undefined || sniper.includes(isFriend));
     };
 
     /**
@@ -235,7 +252,7 @@ export class AttackService {
        * by the baiting piece move
        */
       const parallelAttackNoFlankers = () => {
-        return bottomFlanker === 'isEmpty' && topFlanker === 'isEmpty';
+        return bottomFlanker === isEmpty && topFlanker === isEmpty;
       };
 
       /**
@@ -244,7 +261,7 @@ export class AttackService {
        * by the baiting piece move
        */
       const crossAttackNoFlankers = () => {
-        return topFlanker === 'isEmpty' && transitCell === 'isEmpty';
+        return topFlanker === isEmpty && transitCell === isEmpty;
       };
 
 
@@ -253,22 +270,22 @@ export class AttackService {
        * pieces on its initial position
        */
       const parallelAttackEnemyFlankers = () => {
-        return bottomFlanker === 'isEnemy' && topFlanker === 'isEnemy';
+        return bottomFlanker.includes(isEnemy) && topFlanker.includes(isEnemy);
       };
 
       /**
        * Making a counter attack by parallel baiting the piece under attack
        */
       const parallelAttackBaitFired = () => {
-        return bottomFlanker === 'isEnemy' && topFlanker === 'isEmpty' ||
-                bottomFlanker === 'isEmpty' && topFlanker === 'isEnemy';
+        return bottomFlanker.includes(isEnemy) && topFlanker === isEmpty ||
+                bottomFlanker === isEmpty && topFlanker.includes(isEnemy);
       };
 
       /**
        * Making a counter attack by cross baiting the piece under attack
        */
       const crossAttackBaitFired = () => {
-        return topFlanker === 'isEnemy' && topFlankerGuard !== 'isEmpty';
+        return topFlanker.includes(isEnemy) && topFlankerGuard !== isEmpty;
       };
 
       /**
@@ -276,32 +293,20 @@ export class AttackService {
        * pieces on its initial position
        */
       const parallelAttackFriendlyFlankers = () => {
-        return bottomFlanker === 'isFriend' && topFlanker === 'isFriend' &&
-              (bottomFlankerGuard === 'isFriend' || bottomFlankerGuard === undefined) &&
-              (topFlankerGuard === 'isFriend' || topFlankerGuard === undefined);
+        return bottomFlanker.includes(isFriend) && topFlanker.includes(isFriend) &&
+              (bottomFlankerGuard === undefined || bottomFlankerGuard.includes(isFriend)) &&
+              (topFlankerGuard === undefined || topFlankerGuard.includes(isFriend));
       };
-
-    // } else if (pointing === 'left') {
-    //   bottomFlanker = rightSibling;
-    //   bottomFlankerGuard = bottomLeftSniperL1;
-    //   if (direction === 'parallel') {
-    //     topFlanker = topSibling;
-    //     topFlankerGuard = topLeftSniperL2;
-    //   } else if (direction === 'cross') {
-    //     topFlanker = farTopRight;
-    //     topFlankerGuard = topRightSniperS;
-    //   }
-    // }
 
       /**
        * Parallel attack with baiting piece flanked by a protected friendly
        * piece and and enemy piece on its initial position
        */
       const parallelAttackMixedFlankers = () => {
-        return (bottomFlanker === 'isEnemy' && topFlanker === 'isFriend' &&
-        (topFlankerGuard === 'isFriend' || topFlankerGuard === undefined)) ||
-      (bottomFlanker === 'isFriend' && topFlanker === 'isEnemy' &&
-        (bottomFlankerGuard === 'isFriend' || bottomFlankerGuard === undefined));
+        return (bottomFlanker.includes(isEnemy) && topFlanker.includes(isFriend) &&
+        (topFlankerGuard === undefined || topFlankerGuard.includes(isFriend))) ||
+      (bottomFlanker.includes(isFriend) && topFlanker.includes(isEnemy) &&
+        (bottomFlankerGuard === undefined || bottomFlankerGuard.includes(isFriend)));
       };
 
       /**
@@ -309,10 +314,10 @@ export class AttackService {
        * required for a cross attack
        */
       const crossTransitAndFinalPosCheck = () => {
-        return transitCell === 'isEmpty' && (
-          (bottomEdgeProtector === 'isEmpty' && arrowBottomEdge === 'isEnemy') ||
-          (crossFireSeries === 'isEnemy' && crossFireSeriesGuard === 'isEmpty') ||
-          (crossFireTop === 'isEnemy' && crossFireTopGuard === 'isEmpty')
+        return transitCell === isEmpty && (
+          (bottomEdgeProtector === isEmpty && arrowBottomEdge.includes(isEnemy)) ||
+          (crossFireSeries.includes(isEnemy) && crossFireSeriesGuard === isEmpty) ||
+          (crossFireTop.includes(isEnemy) && crossFireTopGuard === isEmpty)
           );
       };
 
@@ -342,24 +347,45 @@ export class AttackService {
       let bottomFlanker: string;
       let bottomFlankerGuard: string;
       let topFlankerGuard: string;
+      let arrowTip: string;
 
       if (pointing === 'right') {
         bottomFlanker = leftSibling;
         bottomFlankerGuard = bottomLeftSniperL1;
         topFlanker = topSibling;
         topFlankerGuard = topRightSniperL2;
+        arrowTip = bottomRight;
 
       } else if (pointing === 'left') {
         bottomFlanker = rightSibling;
         bottomFlankerGuard = bottomRightSniperL1;
         topFlanker = topSibling;
         topFlankerGuard = topLeftSniperL2;
+        arrowTip = bottomLeft;
       }
 
-      return (topFlanker === 'isFriend' && bottomFlanker === 'isEmpty') &&
-            (topFlankerGuard === 'isFriend' || topFlankerGuard === undefined) ||
-            (topFlanker === 'isEmpty' && bottomFlanker === 'isFriend') &&
-            (bottomFlankerGuard === 'isFriend' || bottomFlankerGuard === undefined);
+      /**
+       * Checks if the tempted piece is a King and if so checks if it will only have one
+       * legal move when baited
+       */
+      const restictionCheck = () => {
+        let crossCaptureSpy: boolean;
+
+        if (arrowTip.includes(kingSuffix)) {
+          if (pointing === 'right') {
+            crossCaptureSpy = moves.positiveDiagonalSpy(topLeftRow, topLeftCol, board, shared.playerPrefix);
+          } else if (pointing === 'left') {
+            crossCaptureSpy = moves.negativeDiagonalSpy(topRightRow, topRightCol, board, shared.playerPrefix);
+          }
+          return !crossCaptureSpy;
+        }
+        return true;
+      };
+
+      return restictionCheck() && (topFlanker.includes(isFriend) && bottomFlanker === isEmpty) &&
+            (topFlankerGuard === undefined || topFlankerGuard.includes(isFriend)) ||
+            (topFlanker === isEmpty && bottomFlanker.includes(isFriend)) &&
+            (bottomFlankerGuard === undefined || bottomFlankerGuard.includes(isFriend));
     };
 
     /**
@@ -388,6 +414,7 @@ export class AttackService {
        * capturing the baited piece.
        */
       let restrictorCell: string;
+      let restrictorCellGuard: string;
 
       responder = topSibling;
 
@@ -403,6 +430,7 @@ export class AttackService {
         seriesCrossFireGuard = bottomRightSniperL1Attacker;
         baitSpoilerCell = bottomRight;
         restrictorCell = farTopRight;
+        restrictorCellGuard = topRightSniperS;
 
       } else if (baitDirection === 'left') {
         cornerL = topRight;
@@ -416,6 +444,7 @@ export class AttackService {
         seriesCrossFireGuard = bottomLeftSniperL1Attacker;
         baitSpoilerCell = bottomLeft;
         restrictorCell = farTopLeft;
+        restrictorCellGuard = topLeftSniperS;
 
       }
 
@@ -424,26 +453,49 @@ export class AttackService {
        * for this skewed bait attack
        */
       const attackingFormationCheck = () => {
-        return responder === 'isFriend' && sniper === 'isFriend' &&
-          (sniperGuard === 'isFriend' || sniperGuard === undefined);
+        return (responder !== undefined && responder === 'isFriend') &&
+          (sniperGuard === undefined || sniper.includes(isFriend)) &&
+          (sniperGuard === undefined || sniperGuard.includes(isFriend));
+      };
+
+      /**
+       * Checks if the tempted piece is a King and if so checks if it will only have one
+       * legal move when baited
+       */
+      const restictorCellCheck = () => {
+        let crossCaptureSpy: boolean;
+        if (baitDirection === 'left') {
+          crossCaptureSpy = moves.positiveDiagonalSpy(topLeftRow, topLeftCol, board, shared.playerPrefix);
+        } else if (baitDirection === 'right') {
+          crossCaptureSpy = moves.negativeDiagonalSpy(topRightRow, topRightCol, board, shared.playerPrefix);
+        }
+
+        if (shortArmTop.includes(kingSuffix)) {
+          return !crossCaptureSpy && (restrictorCell.includes(isEnemy) ||
+                restrictorCell.includes(isFriend) &&
+                (restrictorCellGuard === undefined || restrictorCellGuard.includes(isFriend)));
+        }
+        return false;
       };
 
       /**
        * Checks for the enemy pieces formation necessary for a skewed bait attack
        */
       const enemyFormationCheck = () => {
-        return shortArmTop === 'isEnemy' &&
-          ((longArmTop === 'isEnemy' && longArmGuard === 'isEmpty' ) ||
-            (seriesCrossFire === 'isEnemy' && seriesCrossFireGuard === 'isEmpty'));
+        if (shortArmTop.includes(isEnemy)) {
+          const normalPieceRequirement = (longArmTop.includes(isEnemy) && longArmGuard === isEmpty ) ||
+            (seriesCrossFire.includes(isEnemy) && seriesCrossFireGuard === isEmpty);
+          if (shortArmTop === isEnemy) {
+            return normalPieceRequirement;
+          } else {
+            return normalPieceRequirement && restictorCellCheck();
+          }
+        }
+        return false;
       };
 
-      const restictorCellCheck = () => {
-
-        return
-      };
-
-      return transitCell === 'isEmpty' &&
-            (baitSpoilerCell === 'isEmpty' || baitSpoilerCell === 'isFriend') &&
+      return transitCell === isEmpty &&
+            (baitSpoilerCell === isEmpty || baitSpoilerCell.includes(isFriend)) &&
             attackingFormationCheck() && enemyFormationCheck();
     };
 

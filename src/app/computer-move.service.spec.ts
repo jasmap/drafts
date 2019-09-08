@@ -11,7 +11,7 @@ import { Piece } from './piece';
 describe('ComputerMoveService', () => {
   const sharedService = new SharedService();
   const movesAnalyser = new MovesAnalyserService();
-  const attack = new AttackService(movesAnalyser);
+  const attack = new AttackService(movesAnalyser, sharedService);
   const boardService = new BoardService(movesAnalyser, sharedService);
   const compMoves = new ComputerMoveService(sharedService, movesAnalyser, boardService, attack);
 
@@ -76,6 +76,27 @@ describe('ComputerMoveService', () => {
     expect(sharedService.captureMoves).toEqual(['0. 7:#2. 5xplayer-3']);
   });
 
+  it('king piece should detect capture moves', () => {
+    boardService.board[0][7].setAttribute('id', 'computer-2');
+    boardService.board[7][0].setAttribute('id', 'computerKing-1');  // mainPiece
+
+    boardService.board[2][5].setAttribute('id', 'playerKing-3');
+    boardService.board[2][7].setAttribute('id', 'player-2');
+    const mainPiece = new Piece('computerKing-1', 7, 0, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computeriece1 = new Piece('computer-6', 0, 7, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    const playerPiece1 = new Piece('playerKing-3', 2, 5, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece2 = new Piece('player-2', 2, 7, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    sharedService.computerTurn = true;
+    sharedService.computerPokers = [mainPiece, computeriece1];
+    sharedService.playerPokers = [playerPiece1, playerPiece2];
+    compMoves.computerMove();
+    expect(sharedService.captureMoves).toEqual(['7. 0:#1. 6xplayerKing-3']);
+  });
 
 
 });

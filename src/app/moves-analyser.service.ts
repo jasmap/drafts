@@ -5,6 +5,7 @@ import { Injectable } from '@angular/core';
 })
 export class MovesAnalyserService {
   kingSuffix = 'King';
+  isEmpty = 'isEmpty';
   isEnemy = 'isEnemy';
   isFriend = 'isFriend';
   isEnemyKing = 'isEnemyKing';
@@ -28,7 +29,7 @@ export class MovesAnalyserService {
         }
       } else if (initRow === row && initCol === col) {
         // This means the computer piece will move from this cell, leaving it empty
-        status = 'isEmpty';
+        status = this.isEmpty;
       } else {
         if (id.includes(this.kingSuffix)) {
           status = this.isFriendKing;
@@ -37,22 +38,9 @@ export class MovesAnalyserService {
         }
       }
     } else {
-      status = 'isEmpty';
+      status = this.isEmpty;
     }
     return status;
-  }
-
-  /**
-   * Checks is a given cell is occupied by aking piece
-   */
-  kingCheck(row: number, col: number, board: any[]) {
-    const thisCell = board[row][col];
-    if (thisCell.hasAttribute('id')) {
-      if (thisCell.getAttribute('id').includes(this.kingSuffix)) {
-        return true;
-      }
-      return false;
-    }
   }
 
   /**
@@ -70,7 +58,7 @@ export class MovesAnalyserService {
       if (cellStatus === this.isEnemy) {
           if ( rowX - 1 >= 0 && colY + 1 <= 7) {
               // Victim piece not on edge of board
-              if (this.cellOwnerChecking( rowX - 1, colY + 1, board, enemyPrefix) === 'isEmpty') {
+              if (this.cellOwnerChecking( rowX - 1, colY + 1, board, enemyPrefix) === this.isEmpty) {
                   // Empty cell behind the victim piece hence it can be captured
 
                   return true;
@@ -92,31 +80,30 @@ export class MovesAnalyserService {
    * in a specified direction.
    */
   backwardLeftSpy(row: number, col: number, board: any[], enemyPrefix: string) {
-      let rowX: number;
-      let colY: number;
+    let rowX: number;
+    let colY: number;
 
-      rowX = row + 1;
-      colY = col - 1;
-      while ( rowX <= 7 && colY >= 0) {
-          const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-          if (cellStatus === this.isEnemy) {
-              // Victim piece must not be on edge of board
-              if ( rowX + 1 <= 7 && colY - 1 >= 0) {
-                  if (this.cellOwnerChecking( rowX + 1, colY - 1, board, enemyPrefix) === 'isEmpty') {
-                      // Empty cell behind the victim piece hence it can be captured
-
-                      return true;
-                  }
-              }
-          } else if (cellStatus === this.isFriend) {
-              // Friendly piece, stop querying
-              return false;
+    rowX = row + 1;
+    colY = col - 1;
+    while ( rowX <= 7 && colY >= 0) {
+      const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
+      if (cellStatus === this.isEnemy) {
+        // Victim piece must not be on edge of board
+        if ( rowX + 1 <= 7 && colY - 1 >= 0) {
+          if (this.cellOwnerChecking( rowX + 1, colY - 1, board, enemyPrefix) === this.isEmpty) {
+            // Empty cell behind the victim piece hence it can be captured
+            return true;
           }
-          rowX++;
-          colY--;
+        }
+      } else if (cellStatus === this.isFriend) {
+        // Friendly piece, stop querying
+        return false;
       }
-      // No victim piece in line of fire
-      return false;
+      rowX++;
+      colY--;
+    }
+    // No victim piece in line of fire
+    return false;
   }
 
   /**
@@ -135,7 +122,7 @@ export class MovesAnalyserService {
           if (cellStatus === this.isEnemy) {
               // Victim piece must not be on edge of board
               if ( rowX - 1 >= 0 && colY - 1 >= 0) {
-                  if (this.cellOwnerChecking( rowX - 1, colY - 1, board, enemyPrefix) === 'isEmpty') {
+                  if (this.cellOwnerChecking( rowX - 1, colY - 1, board, enemyPrefix) === this.isEmpty) {
                       // Empty cell behind the victim piece hence it can be captured
 
                       return true;
@@ -167,7 +154,7 @@ export class MovesAnalyserService {
           if (cellStatus === this.isEnemy) {
               // Victim piece must not be on edge of board
               if ( rowX + 1 <= 7 && colY + 1 <= 7) {
-                  if (this.cellOwnerChecking( rowX + 1, colY + 1, board, enemyPrefix) === 'isEmpty') {
+                  if (this.cellOwnerChecking( rowX + 1, colY + 1, board, enemyPrefix) === this.isEmpty) {
                       // Empty cell behind the victim piece hence it can be captured
 
                       return true;
@@ -380,10 +367,10 @@ export class MovesAnalyserService {
       const bottomRight = this.bottomRightCell(finalRow, finalCol, board, enemyPrefix);
       const topRight = this.topRightCell(finalRow, finalCol, board, enemyPrefix, initRow, initCol);
 
-      if ((topLeft === 'isEmpty' && bottomRight === this.isEnemy) ||
-          (topRight === 'isEmpty' && bottomLeft === this.isEnemy) ||
-          (bottomRight === 'isEmpty' && topLeft === this.isEnemy) ||
-          (bottomLeft === 'isEmpty' && topRight === this.isEnemy)) {
+      if ((topLeft === this.isEmpty && bottomRight === this.isEnemy) ||
+          (topRight === this.isEmpty && bottomLeft === this.isEnemy) ||
+          (bottomRight === this.isEmpty && topLeft === this.isEnemy) ||
+          (bottomLeft === this.isEmpty && topRight === this.isEnemy)) {
           // The piece will be captured if it makes this move
           return true;
       } else {
@@ -408,18 +395,18 @@ export class MovesAnalyserService {
           const bottomRightSniperS = this.bottomRightSniperSCell(finalRow, finalCol, board, enemyPrefix);
           const topLeftSniperS = this.topLeftSniperSCell(finalRow, finalCol, board, enemyPrefix);
 
-          if ((bottomRightSniperL1 === this.isEnemy && rightSibling === this.isFriend && topRight === 'isEmpty') ||
-              (bottomLeftSniperL1 === this.isEnemy && leftSibling === this.isFriend && topLeft === 'isEmpty') ||
-              (topLeftSniperL1 === this.isEnemy && rightSibling === this.isFriend && bottomRight === 'isEmpty') ||
-              (topRightSniperL1 === this.isEnemy && leftSibling === this.isFriend && bottomLeft === 'isEmpty') ||
-              (bottomRightSniperL2 === this.isEnemy && bottomSibling === this.isFriend && bottomLeft === 'isEmpty') ||
-              (bottomLeftSniperL2 === this.isEnemy && bottomSibling === this.isFriend && bottomRight === 'isEmpty') ||
-              (topRightSniperL2 === this.isEnemy && topSibling === this.isFriend && topLeft === 'isEmpty') ||
-              (topLeftSniperL2 === this.isEnemy && topSibling === this.isFriend && topRight === 'isEmpty') ||
-              (topRightSniperS === this.isEnemy && farTopRight === this.isFriend && topRight === 'isEmpty') ||
-              (bottomLeftSniperS === this.isEnemy && farBottomLeft === this.isFriend && bottomLeft === 'isEmpty') ||
-              (bottomRightSniperS === this.isEnemy && farBottomRight === this.isFriend && bottomRight === 'isEmpty') ||
-              (topLeftSniperS === this.isEnemy && farTopLeft === this.isFriend && topLeft === 'isEmpty')) {
+          if ((bottomRightSniperL1 === this.isEnemy && rightSibling === this.isFriend && topRight === this.isEmpty) ||
+              (bottomLeftSniperL1 === this.isEnemy && leftSibling === this.isFriend && topLeft === this.isEmpty) ||
+              (topLeftSniperL1 === this.isEnemy && rightSibling === this.isFriend && bottomRight === this.isEmpty) ||
+              (topRightSniperL1 === this.isEnemy && leftSibling === this.isFriend && bottomLeft === this.isEmpty) ||
+              (bottomRightSniperL2 === this.isEnemy && bottomSibling === this.isFriend && bottomLeft === this.isEmpty) ||
+              (bottomLeftSniperL2 === this.isEnemy && bottomSibling === this.isFriend && bottomRight === this.isEmpty) ||
+              (topRightSniperL2 === this.isEnemy && topSibling === this.isFriend && topLeft === this.isEmpty) ||
+              (topLeftSniperL2 === this.isEnemy && topSibling === this.isFriend && topRight === this.isEmpty) ||
+              (topRightSniperS === this.isEnemy && farTopRight === this.isFriend && topRight === this.isEmpty) ||
+              (bottomLeftSniperS === this.isEnemy && farBottomLeft === this.isFriend && bottomLeft === this.isEmpty) ||
+              (bottomRightSniperS === this.isEnemy && farBottomRight === this.isFriend && bottomRight === this.isEmpty) ||
+              (topLeftSniperS === this.isEnemy && farTopLeft === this.isFriend && topLeft === this.isEmpty)) {
               // This move will leave friend to be captured
               return true;
           }

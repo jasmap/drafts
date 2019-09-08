@@ -11,7 +11,7 @@ describe('PieceClass', () => {
   const sharedService = new SharedService();
   const movesAnalyser = new MovesAnalyserService();
   const boardService = new BoardService(movesAnalyser, sharedService);
-  const attack = new AttackService(movesAnalyser);
+  const attack = new AttackService(movesAnalyser, sharedService);
   const compMoves = new ComputerMoveService(sharedService, movesAnalyser, boardService, attack);
 
   beforeEach(() => {
