@@ -23,12 +23,6 @@ export class ComputerMoveService {
    */
   evasiveMoves: string[] = [];
 
-  /**
-   * A tag signifying that this attacking move will result in multiple possible responses
-   * after the enemy has responded
-   */
-  multiResponseTag = 'multiple';
-
   constructor(private shared: SharedService,
               private movesAnalyser: MovesAnalyserService,
               private boardService: BoardService,
@@ -101,7 +95,7 @@ export class ComputerMoveService {
           for (const move of this.shared.captureMoves) {
             if (move.includes(this.preferredResponse)) {
               this.forceCapture(this.shared.captureMoves.indexOf(move));
-              this.preferredResponse = '';
+              this.preferredResponse = undefined;
               break;
             }
           }
@@ -172,13 +166,14 @@ export class ComputerMoveService {
                 let lMoveCopy = lMove;
                 antiCaptureFiltered = true;
 
-                // Checks if this capture prone move can act as a baiting attack move instead
+                // Check if this capture prone move can act as a baiting attack move instead
                 if (this.attack.frontalBait(fRow, fCol, this.boardService.board,
                     this.shared.playerPrefix, initRow, initCol)) {
                   let prunedMove: string;
-                  if (this.attack.hasMultiResponses) {
+                  console.log(this.attack.multiResponsesTag);
+                  if (this.attack.multiResponsesTag) {
                     // Mark this baiting move as having multiple responses
-                    prunedMove = `${iCoordRaw}:${fCoordRaw}${this.multiResponseTag}`;
+                    prunedMove = `${iCoordRaw}:${fCoordRaw}${this.attack.multiResponsesTag}`;
                   } else {
                     prunedMove = `${iCoordRaw}:${fCoordRaw}`;
                   }
@@ -308,8 +303,8 @@ export class ComputerMoveService {
     let selectedMove = movesPool[Math.floor(Math.random() * movesPool.length)];
 
     // Check if this move requires a specific follow up response
-    if (selectedMove.includes(this.multiResponseTag)) {
-      selectedMove = selectedMove.replace(this.multiResponseTag, '');
+    if (selectedMove.includes(this.attack.multiResponsesTag)) {
+      selectedMove = selectedMove.replace(this.attack.multiResponsesTag, '');
       needSpecificResponse = true;
     }
 
@@ -319,11 +314,28 @@ export class ComputerMoveService {
         Math.floor(Math.random() * moveString.finalCoordsPure.length)];
 
     if (needSpecificResponse) {
+      let direction: string;
+      if (this.attack.multiResponsesTag.includes(this.attack.parallelMove)) {
+        direction = this.attack.parallelMove;
+      } else if (this.attack.multiResponsesTag.includes(this.attack.crossMove)) {
+        direction = this.attack.crossMove;
+      }
+
+      this.attack.resetMultipleResponseTag();
+
       const deltaMove = Math.abs(+`${rowFinal}${colFinal}` - +`${rowInit}${colInit}`);
-      if (deltaMove === 11) {
-        this.preferredResponse = `${rowInit - 1}. ${colInit - 1}:`;
-      } else if (deltaMove === 9) {
-        this.preferredResponse = `${rowInit - 1}. ${colInit + 1}:`;
+      if (direction === this.attack.parallelMove) {
+        if (deltaMove === 11) {
+          this.preferredResponse = `${rowInit - 1}. ${colInit - 1}:`;
+        } else if (deltaMove === 9) {
+          this.preferredResponse = `${rowInit - 1}. ${colInit + 1}:`;
+        }
+      } else if (direction === this.attack.crossMove) {
+        if (deltaMove === 11) {
+          this.preferredResponse = `${rowInit - 1}. ${colInit + 1}:`;
+        } else if (deltaMove === 9) {
+          this.preferredResponse = `${rowInit - 1}. ${colInit - 1}:`;
+        }
       }
     }
 

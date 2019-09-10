@@ -7,12 +7,29 @@ import { SharedService } from './shared.service';
   providedIn: 'root'
 })
 export class AttackService {
+  /**
+   * A tag signifying that this attacking move will result in multiple possible responses
+   * after the enemy has responded
+   */
+  multiResponsePrefix = 'multiple';
+
+  /**
+   * A tag to signify that the baiting and the responding piece moves are in parallel to each other
+   */
+  parallelMove = 'parallel';
+
+  /**
+   * A tag to signify that the baiting and the responding piece moves are perpendicular
+   * to each other
+   */
+  crossMove = 'cross';
+
 
   /**
    * A flag that marks a baiting attack as having multi possible responses after the bait
    * has been captured
    */
-  hasMultiResponses: boolean;
+  multiResponsesTag: string;
 
   constructor(private moves: MovesAnalyserService, private shared: SharedService) { }
 
@@ -57,7 +74,7 @@ export class AttackService {
     const isFriendKing: string = moves.isFriendKing;
     const kingSuffix: string = moves.kingSuffix;
 
-    this.hasMultiResponses = false;
+    this.multiResponsesTag = undefined;
 
     // Essential coordinates
     const topLeftRow = finalRow - 1;
@@ -86,9 +103,9 @@ export class AttackService {
         arrowBottomEdge = bottomLeft;
         arrowTopEdge = topRight;
         topEdgeParallelAttackProtector = farTopRight;
-        if (direction === 'parallel') {
+        if (direction === this.parallelMove) {
           bottomEdgeProtector = farBottomLeft;
-        } else if (direction === 'cross') {
+        } else if (direction === this.crossMove) {
           bottomEdgeProtector = bottomSibling;
           transitCrossAttackCell = leftSibling;
         }
@@ -97,9 +114,9 @@ export class AttackService {
         arrowBottomEdge = bottomRight;
         arrowTopEdge = topLeft;
         topEdgeParallelAttackProtector = farTopLeft;
-        if (direction === 'parallel') {
+        if (direction === this.parallelMove) {
           bottomEdgeProtector = farBottomRight;
-        } else if (direction === 'cross') {
+        } else if (direction === this.crossMove) {
           bottomEdgeProtector = bottomSibling;
           transitCrossAttackCell = rightSibling;
         }
@@ -128,9 +145,9 @@ export class AttackService {
        * Decides which attack formation to use in the parent function return evaluation
        */
       const attackDirection = () => {
-        if (direction === 'parallel') {
+        if (direction === this.parallelMove) {
           return arrowEdgesParallelAttackCheck();
-        } else if (direction === 'cross') {
+        } else if (direction === this.crossMove) {
           return arrowEdgesCrossAttackCheck();
         }
       };
@@ -152,11 +169,11 @@ export class AttackService {
       let supporter: string;
       let sniper: string;
 
-      if (direction === 'parallel') {
+      if (direction === this.parallelMove) {
         initialSpot = topLeft;
         supporter = farTopLeft;
         sniper = topLeftSniperS;
-      } else if (direction === 'cross') {
+      } else if (direction === this.crossMove) {
         initialSpot = topRight;
         supporter = topSibling;
         sniper = topLeftSniperL2;
@@ -178,11 +195,11 @@ export class AttackService {
       let supporter: string;
       let sniper: string;
 
-      if (direction === 'parallel') {
+      if (direction === this.parallelMove) {
         initialSpot = topRight;
         supporter = farTopRight;
         sniper = topRightSniperS;
-      } else if (direction === 'cross') {
+      } else if (direction === this.crossMove) {
         initialSpot = topLeft;
         supporter = topSibling;
         sniper = topRightSniperL2;
@@ -214,10 +231,10 @@ export class AttackService {
       if (pointing === 'right') {
         bottomFlanker = leftSibling;
         bottomFlankerGuard = bottomLeftSniperL1;
-        if (direction === 'parallel') {
+        if (direction === this.parallelMove) {
           topFlanker = topSibling;
           topFlankerGuard = topRightSniperL2;
-        } else if (direction === 'cross') {
+        } else if (direction === this.crossMove) {
           topFlanker = farTopLeft;
           topFlankerGuard = topLeftSniperS;
           transitCell = leftSibling;
@@ -232,10 +249,10 @@ export class AttackService {
       } else if (pointing === 'left') {
         bottomFlanker = rightSibling;
         bottomFlankerGuard = bottomRightSniperL1;
-        if (direction === 'parallel') {
+        if (direction === this.parallelMove) {
           topFlanker = topSibling;
           topFlankerGuard = topLeftSniperL2;
-        } else if (direction === 'cross') {
+        } else if (direction === this.crossMove) {
           topFlanker = farTopRight;
           topFlankerGuard = topRightSniperS;
           transitCell = rightSibling;
@@ -324,13 +341,13 @@ export class AttackService {
           );
       };
 
-      if (direction === 'parallel') {
+      if (direction === this.parallelMove) {
         return parallelAttackNoFlankers() ||
               parallelAttackFriendlyFlankers() ||
               parallelAttackEnemyFlankers() ||
               parallelAttackBaitFired() ||
               parallelAttackMixedFlankers();
-      } else if (direction === 'cross') {
+      } else if (direction === this.crossMove) {
         // console.log('crossTransitAndFinalPosCheck()');
         return crossTransitAndFinalPosCheck() && (crossAttackNoFlankers() || crossAttackBaitFired());
       }
@@ -338,33 +355,33 @@ export class AttackService {
 
 
     /**
-     * Parallel attack with baiting piece supported by 2 friendly
+     * Baiting attack with baiting piece supported by 2 friendly
      * pieces, both capable of capturing the baited enemy piece
      *
-     * @param pointing - the direction at which the arrow is pointing (left or right)
-     * @param direction - The baiting piece move direction in respect to the responding
-     * piece follow up capture move (parallel or cross)
+     * @param direction - the direction at which the baiting piece will move.
+     * For an arrow formation, this is the same as the direction at which
+     * the arrow is pointing (left or right)
      */
-    const parallelAttackDoubleResponse = (pointing: string, direction: string) => {
+    const baitingAttackDoubleResponse = (direction: string) => {
       let topFlanker: string;
       let bottomFlanker: string;
       let bottomFlankerGuard: string;
       let topFlankerGuard: string;
-      let arrowTip: string;
+      let temptedPiece: string;
 
-      if (pointing === 'right') {
+      if (direction === 'right') {
         bottomFlanker = leftSibling;
         bottomFlankerGuard = bottomLeftSniperL1;
         topFlanker = topSibling;
         topFlankerGuard = topRightSniperL2;
-        arrowTip = bottomRight;
+        temptedPiece = bottomRight;
 
-      } else if (pointing === 'left') {
+      } else if (direction === 'left') {
         bottomFlanker = rightSibling;
         bottomFlankerGuard = bottomRightSniperL1;
         topFlanker = topSibling;
         topFlankerGuard = topLeftSniperL2;
-        arrowTip = bottomLeft;
+        temptedPiece = bottomLeft;
       }
 
       /**
@@ -374,10 +391,10 @@ export class AttackService {
       const restictionCheck = () => {
         let crossCaptureSpy: boolean;
 
-        if (arrowTip.includes(kingSuffix)) {
-          if (pointing === 'right') {
+        if (temptedPiece.includes(kingSuffix)) {
+          if (direction === 'right') {
             crossCaptureSpy = moves.positiveDiagonalSpy(topLeftRow, topLeftCol, board, shared.playerPrefix);
-          } else if (pointing === 'left') {
+          } else if (direction === 'left') {
             crossCaptureSpy = moves.negativeDiagonalSpy(topRightRow, topRightCol, board, shared.playerPrefix);
           }
           return !crossCaptureSpy;
@@ -503,36 +520,43 @@ export class AttackService {
     };
 
     if (bigLCheck('right', 'down')) {
+      if (baitingAttackDoubleResponse('right')) {
+        this.multiResponsesTag = this.multiResponsePrefix + this.crossMove;
+      }
       console.log('bigL, right, down');
       return true;
     } else if (bigLCheck('left', 'down')) {
+      if (baitingAttackDoubleResponse('right')) {
+        this.multiResponsesTag = this.multiResponsePrefix + this.crossMove;
+      }
+
       return true;
     }
 
-    if (arrowHeadCheck('right', 'parallel')) {
+    if (arrowHeadCheck('right', this.parallelMove)) {
       console.log('arrowHeadCheck, right, parallel');
-      if (negativeDiagonalAttackFormationCheck('parallel')) {
-        if (flankingCheck('right', 'parallel')) {
+      if (negativeDiagonalAttackFormationCheck(this.parallelMove)) {
+        if (flankingCheck('right', this.parallelMove)) {
           return true;
-        } else if (parallelAttackDoubleResponse('right', 'parallel')) {
-          this.hasMultiResponses = true;
+        } else if (baitingAttackDoubleResponse('right')) {
+          this.multiResponsesTag = this.multiResponsePrefix + this.parallelMove;
           return true;
         }
-      } else if (positiveDiagonalAttackFormationCheck('cross')) {
+      } else if (positiveDiagonalAttackFormationCheck(this.crossMove)) {
         console.log('positiveDiagonalAttackFormationCheck 1');
-        if (flankingCheck('right', 'cross')) {
+        if (flankingCheck('right', this.crossMove)) {
           return true;
         }
       }
-    } else if (arrowHeadCheck('right', 'cross')) {
+    } else if (arrowHeadCheck('right', this.crossMove)) {
       console.log('arrowHeadCheck right cross');
-      if (positiveDiagonalAttackFormationCheck('cross')) {
+      if (positiveDiagonalAttackFormationCheck(this.crossMove)) {
         console.log('positiveDiagonalAttackFormationCheck');
-        if (flankingCheck('right', 'cross')) {
+        if (flankingCheck('right', this.crossMove)) {
           return true;
         // TODO: Implement the below else if
 
-        // } else if (crossAttackDoubleResponse('right', 'cross')) {
+        // } else if (crossAttackDoubleResponse('right', crossMove)) {
         //   this.hasMultiResponses = true;
         //   return true;
         }
@@ -540,29 +564,29 @@ export class AttackService {
     }
 
 
-    if (arrowHeadCheck('left', 'parallel')) {
+    if (arrowHeadCheck('left', this.parallelMove)) {
       console.log('arrowHeadCheck left parallel');
-      if (positiveDiagonalAttackFormationCheck('parallel')) {
-        if (flankingCheck('left', 'parallel')) {
+      if (positiveDiagonalAttackFormationCheck(this.parallelMove)) {
+        if (flankingCheck('left', this.parallelMove)) {
           return true;
-        } else if (parallelAttackDoubleResponse('left', 'parallel')) {
-          this.hasMultiResponses = true;
+        } else if (baitingAttackDoubleResponse('left')) {
+          this.multiResponsesTag = this.multiResponsePrefix + this.parallelMove;
           return true;
         }
-      } else if (negativeDiagonalAttackFormationCheck('cross')) {
-        if (flankingCheck('left', 'cross')) {
+      } else if (negativeDiagonalAttackFormationCheck(this.crossMove)) {
+        if (flankingCheck('left', this.crossMove)) {
           return true;
         }
       }
-    } else if (arrowHeadCheck('left', 'cross')) {
+    } else if (arrowHeadCheck('left', this.crossMove)) {
       console.log('arrowHeadCheck left cross');
-      if (negativeDiagonalAttackFormationCheck('cross')) {
-        if (flankingCheck('left', 'cross')) {
+      if (negativeDiagonalAttackFormationCheck(this.crossMove)) {
+        if (flankingCheck('left', this.crossMove)) {
           return true;
 
           // TODO: Implement the below else if
 
-        // } else if (crossAttackDoubleResponse('left', 'cross')) {
+        // } else if (crossAttackDoubleResponse('left', crossMove)) {
         //     console.log('Double response Left cross');
         //     this.hasMultiResponses = true;
         //     return true;
@@ -571,5 +595,9 @@ export class AttackService {
     }
 
     return false;
+  }
+
+  resetMultipleResponseTag() {
+    this.multiResponsesTag = undefined;
   }
 }
