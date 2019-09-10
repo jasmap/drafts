@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 
 import { Player } from './player';
 import { SharedService } from './shared.service';
-import { MovesAnalyserService } from './moves-analyser.service';
-import { ComputerMoveService } from './computer-move.service';
 
 @Injectable({
   providedIn: 'root'
@@ -20,8 +18,7 @@ export class BoardService {
   board: any[];
   player: Player;
   fragement = document.createDocumentFragment();
-  constructor(
-    public movesAnalyser: MovesAnalyserService, public shared: SharedService) {
+  constructor(public shared: SharedService) {
     this.board = this.createBoard();
   }
 

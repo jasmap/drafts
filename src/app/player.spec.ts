@@ -17,10 +17,10 @@ describe('PlayerClass', () => {
     '21', '23', '25', '27'
   ];
   const sharedService = new SharedService();
-  const movesAnalyser = new MovesAnalyserService();
-  const cellsService = new BoardService(movesAnalyser, sharedService);
+  const boardService = new BoardService(sharedService);
+  const movesAnalyser = new MovesAnalyserService(sharedService, boardService);
   const attack = new AttackService(movesAnalyser, sharedService);
-  const compMove = new ComputerMoveService(sharedService, movesAnalyser, cellsService, attack);
+  const compMove = new ComputerMoveService(sharedService, movesAnalyser, boardService, attack);
 
 
   beforeEach(() => {
@@ -29,7 +29,7 @@ describe('PlayerClass', () => {
 
   it('should create computer pieces', () => {
     mockPlayer = new Player(sharedService.computerPrefix, positions, sharedService,
-      cellsService, movesAnalyser, compMove);
+      boardService, movesAnalyser, compMove);
     mockPlayer.deal();
     const pieces = sharedService.computerPokers;
     expect(pieces.length).toEqual(positions.length);
@@ -37,7 +37,7 @@ describe('PlayerClass', () => {
 
   it('should create player pieces', () => {
     mockPlayer = new Player(sharedService.playerPrefix, positions, sharedService,
-      cellsService, movesAnalyser, compMove);
+      boardService, movesAnalyser, compMove);
     mockPlayer.deal();
     const pieces = sharedService.playerPokers;
     expect(pieces.length).toEqual(positions.length);

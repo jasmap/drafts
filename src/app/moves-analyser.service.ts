@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { SharedService } from './shared.service';
+import { BoardService } from './board.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +13,7 @@ export class MovesAnalyserService {
   isEnemyKing = 'isEnemyKing';
   isFriendKing = 'isFriendKing';
 
-  constructor() {}
+  constructor(private shared: SharedService, private board: BoardService) {}
 
   /**
    * Checks and reports the status of a given cell
@@ -55,7 +57,7 @@ export class MovesAnalyserService {
     colY = col + 1;
     while ( rowX >= 0 && colY <= 7) {
       const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-      if (cellStatus === this.isEnemy) {
+      if (cellStatus !== undefined && cellStatus.includes(this.isEnemy)) {
           if ( rowX - 1 >= 0 && colY + 1 <= 7) {
               // Victim piece not on edge of board
               if (this.cellOwnerChecking( rowX - 1, colY + 1, board, enemyPrefix) === this.isEmpty) {
@@ -87,7 +89,7 @@ export class MovesAnalyserService {
     colY = col - 1;
     while ( rowX <= 7 && colY >= 0) {
       const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-      if (cellStatus === this.isEnemy) {
+      if (cellStatus !== undefined && cellStatus.includes(this.isEnemy)) {
         // Victim piece must not be on edge of board
         if ( rowX + 1 <= 7 && colY - 1 >= 0) {
           if (this.cellOwnerChecking( rowX + 1, colY - 1, board, enemyPrefix) === this.isEmpty) {
@@ -119,7 +121,7 @@ export class MovesAnalyserService {
       colY = col - 1;
       while ( rowX >= 0 && colY >= 0) {
           const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-          if (cellStatus === this.isEnemy) {
+          if (cellStatus !== undefined && cellStatus.includes(this.isEnemy)) {
               // Victim piece must not be on edge of board
               if ( rowX - 1 >= 0 && colY - 1 >= 0) {
                   if (this.cellOwnerChecking( rowX - 1, colY - 1, board, enemyPrefix) === this.isEmpty) {
@@ -151,7 +153,7 @@ export class MovesAnalyserService {
       colY = col + 1;
       while ( rowX <= 7 && colY <= 7) {
           const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-          if (cellStatus === this.isEnemy) {
+          if (cellStatus !== undefined && cellStatus.includes(this.isEnemy)) {
               // Victim piece must not be on edge of board
               if ( rowX + 1 <= 7 && colY + 1 <= 7) {
                   if (this.cellOwnerChecking( rowX + 1, colY + 1, board, enemyPrefix) === this.isEmpty) {
@@ -358,7 +360,8 @@ export class MovesAnalyserService {
   }
 
   /**
-   * Checks whether a move will result in the direct capture of this moving piece.
+   * Checks whether a move will result in the direct capture of the moving piece, or
+   * any of the friendly pieces.
    */
   captureRisk(initRow: number, initCol: number, board: any[], enemyPrefix: string, finalRow: number, finalCol: number) {
       /* Investigate Direct Capture Risk */
@@ -367,10 +370,58 @@ export class MovesAnalyserService {
       const bottomRight = this.bottomRightCell(finalRow, finalCol, board, enemyPrefix);
       const topRight = this.topRightCell(finalRow, finalCol, board, enemyPrefix, initRow, initCol);
 
-      if ((topLeft === this.isEmpty && bottomRight === this.isEnemy) ||
-          (topRight === this.isEmpty && bottomLeft === this.isEnemy) ||
-          (bottomRight === this.isEmpty && topLeft === this.isEnemy) ||
-          (bottomLeft === this.isEmpty && topRight === this.isEnemy)) {
+      const opponentKings = [];
+
+      for (const poker of this.shared.playerPokers) {
+        if (poker.isKing) {
+          opponentKings.push(poker);
+        }
+      }
+
+      if  (opponentKings.length > 0) {
+        const positiveMagic = 9;
+        const negativeMagic = 11;
+        let kingNum: number;
+        let delta: number;
+        let kingRow: number;
+        let kingCol: number;
+
+        const pieceNum: number = finalRow === 0 ? +`${finalCol}` : +`${finalRow}${finalCol}`;
+        for (const king of opponentKings) {
+          [kingRow, kingCol] = king.currentPosition();
+          if (kingRow !== 0) {
+            kingNum = +`${kingRow}${kingCol}`;
+          } else {
+            kingNum = +`${kingCol}`;
+          }
+
+          delta = Math.abs(kingNum - pieceNum);
+          if (delta % positiveMagic === 0) {
+            if (!this.positiveDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.playerPrefix)) {
+              this.board.board[finalRow][finalCol].setAttribute('id', this.shared.playerPrefix);
+              if (this.positiveDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.playerPrefix)) {
+                this.board.board[finalRow][finalCol].removeAttribute('id');
+                return true;
+              }
+              this.board.board[finalRow][finalCol].removeAttribute('id');
+            }
+          } else if (delta % negativeMagic === 0) {
+            if (!this.negativeDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.playerPrefix)) {
+              this.board.board[finalRow][finalCol].setAttribute('id', this.shared.playerPrefix);
+              if (this.negativeDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.playerPrefix)) {
+                this.board.board[finalRow][finalCol].removeAttribute('id');
+                return true;
+              }
+              this.board.board[finalRow][finalCol].removeAttribute('id');
+            }
+          }
+        }
+      }
+
+      if ((topLeft === this.isEmpty && (bottomRight !== undefined && bottomRight.includes(this.isEnemy))) ||
+          (topRight === this.isEmpty && (bottomLeft !== undefined && bottomLeft.includes(this.isEnemy))) ||
+          (bottomRight === this.isEmpty && (topLeft !== undefined && topLeft.includes(this.isEnemy))) ||
+          (bottomLeft === this.isEmpty && (topRight !== undefined && topRight.includes(this.isEnemy)))) {
           // The piece will be captured if it makes this move
           return true;
       } else {

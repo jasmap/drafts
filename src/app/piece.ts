@@ -5,15 +5,15 @@ import { ComputerMoveService } from './computer-move.service';
 
 export class Piece {
   constructor(public id: string, private row: number, private col: number,
-              private isKing: boolean = false, private sharedService: SharedService,
+              public isKing: boolean = false, private sharedService: SharedService,
               private cellsService: BoardService, private movesAnalyser: MovesAnalyserService,
               private compMoves: ComputerMoveService) {}
 
   /**
    * Coordinates of the piece on the board
    */
-  currentPosition() {
-      return [this.row, this.col];
+  public currentPosition() {
+    return [this.row, this.col];
   }
 
   /**

@@ -9,8 +9,8 @@ import { AttackService } from './attack.service';
 
 describe('PieceClass', () => {
   const sharedService = new SharedService();
-  const movesAnalyser = new MovesAnalyserService();
-  const boardService = new BoardService(movesAnalyser, sharedService);
+  const boardService = new BoardService(sharedService);
+  const movesAnalyser = new MovesAnalyserService(sharedService, boardService);
   const attack = new AttackService(movesAnalyser, sharedService);
   const compMoves = new ComputerMoveService(sharedService, movesAnalyser, boardService, attack);
 

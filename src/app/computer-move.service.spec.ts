@@ -10,9 +10,9 @@ import { Piece } from './piece';
 
 describe('ComputerMoveService', () => {
   const sharedService = new SharedService();
-  const movesAnalyser = new MovesAnalyserService();
+  const boardService = new BoardService(sharedService);
+  const movesAnalyser = new MovesAnalyserService(sharedService, boardService);
   const attack = new AttackService(movesAnalyser, sharedService);
-  const boardService = new BoardService(movesAnalyser, sharedService);
   const compMoves = new ComputerMoveService(sharedService, movesAnalyser, boardService, attack);
 
   beforeEach(() => {
@@ -98,5 +98,32 @@ describe('ComputerMoveService', () => {
     expect(sharedService.captureMoves).toEqual(['7. 0:#1. 6xplayerKing-3']);
   });
 
+  it('should detect a line guarded by an enemy king, and avoid it if possible, even from a distance', () => {
+    boardService.board[0][5].setAttribute('id', 'computer-2');
+    boardService.board[0][7].setAttribute('id', 'computer-3');
+    boardService.board[1][6].setAttribute('id', 'computer-8');
+    boardService.board[2][3].setAttribute('id', 'computer-1'); // mainPiece
+    boardService.board[2][7].setAttribute('id', 'computer-5');
+
+    boardService.board[3][6].setAttribute('id', 'playerKing-3');
+    boardService.board[4][5].setAttribute('id', 'player-2');
+
+    const mainPiece = new Piece('computer-1', 2, 3, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computeriece1 = new Piece('computer-2', 0, 5, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computerPiece2 = new Piece('computer-8', 1, 6, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    const playerPiece1 = new Piece('playerKing-3', 3, 6, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece2 = new Piece('player-2', 4, 5, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    sharedService.computerTurn = true;
+    sharedService.computerPokers = [mainPiece, computeriece1, computerPiece2];
+    sharedService.playerPokers = [playerPiece1, playerPiece2];
+    compMoves.computerMove();
+    expect(compMoves.legalMovesBank).toEqual(['2. 3:3. 2']);
+  });
 
 });

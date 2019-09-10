@@ -16,6 +16,9 @@ export class AttackService {
 
   constructor(private moves: MovesAnalyserService, private shared: SharedService) { }
 
+  /**
+   * Checks for the possibility of front baiting the concerned piece for a gain
+   */
   frontalBait = (finalRow: number, finalCol: number, board: any[], enemyPrefix: string, initRow: number, initCol: number) => {
     const moves = this.moves;
     const shared = this.shared;

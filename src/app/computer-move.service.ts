@@ -11,6 +11,13 @@ import { AttackService } from './attack.service';
 export class ComputerMoveService {
   attackMoves: string[] = [];
   preferredResponse: string;
+
+  /**
+   * Primarily contains all the legal moves a player has. For the computer, this can
+   * also contain filtered moves which are less than all the legal moves.
+   */
+  legalMovesBank: string[];
+
   /**
    * Contains possible defensive moves gleaned from the available moves array
    */
@@ -32,7 +39,7 @@ export class ComputerMoveService {
    */
   computerMove() {
     this.attackMoves = [];
-    const legalMovesBank = [];
+    this.legalMovesBank = [];
     const currentThreats = this.threats();
     /**
      * Contains indices of possible defensive moves inside the available moves array.
@@ -85,9 +92,9 @@ export class ComputerMoveService {
       }
     };
 
-    this.legalMovesCompilation(this.shared.computerPokers, legalMovesBank);
+    this.legalMovesCompilation(this.shared.computerPokers, this.legalMovesBank);
 
-    if (legalMovesBank.length > 0) {
+    if (this.legalMovesBank.length > 0) {
       if (this.shared.captureMoves.length > 0) {
 
         if (this.preferredResponse) {
@@ -114,13 +121,13 @@ export class ComputerMoveService {
         }
 
       } else {
-        directCaptureAvoidance(currentThreats, legalMovesBank);
+        directCaptureAvoidance(currentThreats, this.legalMovesBank);
         if (priorityMoves.length > 0) {
 
           this.evasiveMoves = [];
 
           priorityMoves.forEach((num) => {
-              this.evasiveMoves.push(legalMovesBank[num]);
+              this.evasiveMoves.push(this.legalMovesBank[num]);
           });
 
           const evasiveMovesCopy = this.evasiveMoves.slice(0);
@@ -138,16 +145,16 @@ export class ComputerMoveService {
               });
           });
           if (this.evasiveMoves.length > 0 && this.evasiveMoves.length < evasiveMovesCopy.length) {
-              // Capture prone evasive moves have been filtered out
-              this.monkeyStyle(this.evasiveMoves);
+            // Capture prone evasive moves have been filtered out
+            this.monkeyStyle(this.evasiveMoves);
           } else {
-              // All attempted evasive moves will result in a capture, so just play any evasive move
-              this.monkeyStyle(evasiveMovesCopy);
+            // All attempted evasive moves will result in a capture, so just play any evasive move
+            this.monkeyStyle(evasiveMovesCopy);
           }
 
         } else {
           let antiCaptureFiltered = false;
-          const legalMovesCopy = legalMovesBank.slice(0);
+          const legalMovesCopy = this.legalMovesBank.slice(0);
           legalMovesCopy.forEach((lMove) => {
             const nMoveUnpacker = this.boardService.normalMoveUnpacker(lMove);
             const [initRow, initCol] = nMoveUnpacker.initCoordinates;
@@ -158,76 +165,77 @@ export class ComputerMoveService {
                   this.shared.playerPrefix, finalRow, finalCol);
               const iCoordRaw = `${initRow}. ${initCol}`;
               if (isCaptureProne) {
-                    let numberOfAlternativeMoves: number;
-                    let index: number;
-                    const [fRow, fCol] = fCoord;
-                    const fCoordRaw = `${fRow}. ${fCol}`;
-                    let lMoveCopy = lMove;
-                    antiCaptureFiltered = true;
+                let numberOfAlternativeMoves: number;
+                let index: number;
+                const [fRow, fCol] = fCoord;
+                const fCoordRaw = `${fRow}. ${fCol}`;
+                let lMoveCopy = lMove;
+                antiCaptureFiltered = true;
 
-                    if (this.attack.frontalBait(fRow, fCol, this.boardService.board,
-                      this.shared.playerPrefix, initRow, initCol)) {
-                        let prunedMove: string;
-                        if (this.attack.hasMultiResponses) {
-                          // Mark this baiting move as having multiple responses
-                          prunedMove = `${iCoordRaw}:${fCoordRaw}${this.multiResponseTag}`;
-                        } else {
-                          prunedMove = `${iCoordRaw}:${fCoordRaw}`;
-                        }
-
-                        this.attackMoves.push(prunedMove);
-                    }
-
-                    for (const move of legalMovesBank) {
-                        if (move.startsWith(iCoordRaw + ':')) {
-                            const nMvUnpk = this.boardService.normalMoveUnpacker(move);
-                            index = legalMovesBank.indexOf(move);
-                            numberOfAlternativeMoves = nMvUnpk.finalCoordsRaw.length;
-                            break;
-                        }
-                    }
-                    if (numberOfAlternativeMoves === 1) {
-                        // Just remove the whole move
-                        const x = legalMovesBank.splice(index, 1);
-                    } else {
-                        // The piece has more than one alternative moves
-                        if (lMoveCopy.endsWith(fCoordRaw)) {
-                            // Remove this alternative move together with its preceeding comma
-                            lMoveCopy = lMoveCopy.replace(',' + fCoordRaw, '');
-                            const x = legalMovesBank.splice(index, 1, lMoveCopy);
-                        } else {
-                            // Remove this alternative move together with its trailing comma
-                            lMoveCopy = lMoveCopy.replace(fCoordRaw + ',', '');
-                            const x = legalMovesBank.splice(index, 1, lMoveCopy);
-                        }
-                    }
-
+                // Checks if this capture prone move can act as a baiting attack move instead
+                if (this.attack.frontalBait(fRow, fCol, this.boardService.board,
+                    this.shared.playerPrefix, initRow, initCol)) {
+                  let prunedMove: string;
+                  if (this.attack.hasMultiResponses) {
+                    // Mark this baiting move as having multiple responses
+                    prunedMove = `${iCoordRaw}:${fCoordRaw}${this.multiResponseTag}`;
+                  } else {
+                    prunedMove = `${iCoordRaw}:${fCoordRaw}`;
+                  }
+                  this.attackMoves.push(prunedMove);
                 }
+
+                // Deduce the number of possible moves the identified capture prone piece can move
+                for (const move of this.legalMovesBank) {
+                  if (move.startsWith(iCoordRaw + ':')) {
+                    const nMvUnpk = this.boardService.normalMoveUnpacker(move);
+                    index = this.legalMovesBank.indexOf(move);
+                    numberOfAlternativeMoves = nMvUnpk.finalCoordsRaw.length;
+                    break;
+                  }
+                }
+
+                if (numberOfAlternativeMoves === 1) {
+                  // Just remove the whole move from the moves bank
+                  const x = this.legalMovesBank.splice(index, 1);
+                } else {
+                  // The piece has more than one alternative moves
+                  if (lMoveCopy.endsWith(fCoordRaw)) {
+                    // Remove this alternative move together with its preceeding comma
+                    lMoveCopy = lMoveCopy.replace(',' + fCoordRaw, '');
+                    const x = this.legalMovesBank.splice(index, 1, lMoveCopy);
+                  } else {
+                    // Remove this alternative move together with its trailing comma
+                    lMoveCopy = lMoveCopy.replace(fCoordRaw + ',', '');
+                    const x = this.legalMovesBank.splice(index, 1, lMoveCopy);
+                  }
+                }
+              }
             });
           });
 
           if (this.attackMoves.length > 0) {
-              this.monkeyStyle(this.attackMoves);
-              return;
+            this.monkeyStyle(this.attackMoves);
+            return;
           }
 
           if (antiCaptureFiltered) {
-              if (legalMovesBank.length > 0) {
-                  // Capture prone moves have been filtered out
-                  this.monkeyStyle(legalMovesBank);
-              } else {
-                  // All attempted moves will result in a capture, so just play any move
-                  this.monkeyStyle(legalMovesCopy);
-              }
-          } else {
+            if (this.legalMovesBank.length > 0) {
+              // Capture prone moves have been filtered out
+              this.monkeyStyle(this.legalMovesBank);
+            } else {
+              // All attempted moves will result in a capture, so just play any move
               this.monkeyStyle(legalMovesCopy);
+            }
+        } else {
+            this.monkeyStyle(legalMovesCopy);
           }
           antiCaptureFiltered = false;
         }
       }
     } else {
-        alert('You did it! Next time I won\'t be easy on you.');
-        this.boardService.disableAllCells();
+      alert('You did it! Next time I won\'t be easy on you.');
+      this.boardService.disableAllCells();
     }
   }
 
@@ -237,15 +245,15 @@ export class ComputerMoveService {
    * Ends the game if it is the players turn and the player does not have any legal moves left
    */
   playerHealthAnalysis() {
-    const legalMovesBank = [];
+    const playerMoves = [];
     // Gather all player legal moves for the present turn
-    this.legalMovesCompilation(this.shared.playerPokers, legalMovesBank);
+    this.legalMovesCompilation(this.shared.playerPokers, playerMoves);
 
-    if (legalMovesBank.length === 0) {
-        if (!this.shared.computerTurn) {
-            alert('Sorry, you didn\'t make it this time!');
-            this.boardService.disableAllCells();
-        }
+    if (playerMoves.length === 0) {
+      if (!this.shared.computerTurn) {
+        alert('Sorry, you didn\'t make it this time!');
+        this.boardService.disableAllCells();
+      }
     }
   }
 
@@ -259,11 +267,11 @@ export class ComputerMoveService {
    */
   legalMovesCompilation(pokers: any[], movesPool: string[]) {
     for (const poker of pokers) {
-        const lm = poker.legalMoves();
-        if (lm.length > 0) {
-            const [row, col] = poker.currentPosition();
-            movesPool.push(`${row}. ${col}:${lm}`);
-        }
+      const lm = poker.legalMoves();
+      if (lm.length > 0) {
+        const [row, col] = poker.currentPosition();
+        movesPool.push(`${row}. ${col}:${lm}`);
+      }
     }
   }
 

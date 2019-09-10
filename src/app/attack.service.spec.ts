@@ -10,9 +10,9 @@ import { BoardComponent } from './board/board.component';
 
 describe('AttackService', () => {
   const sharedService = new SharedService();
-  const movesAnalyser = new MovesAnalyserService();
+  const boardService = new BoardService(sharedService);
+  const movesAnalyser = new MovesAnalyserService(sharedService, boardService);
   const attack = new AttackService(movesAnalyser, sharedService);
-  const boardService = new BoardService(movesAnalyser, sharedService);
   const compMoves = new ComputerMoveService(sharedService, movesAnalyser, boardService, attack);
 
   beforeEach(() => {
