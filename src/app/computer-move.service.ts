@@ -96,7 +96,7 @@ export class ComputerMoveService {
             if (move.includes(this.preferredResponse)) {
               this.forceCapture(this.shared.captureMoves.indexOf(move));
               this.preferredResponse = undefined;
-              break;
+              return;
             }
           }
         } else {
@@ -146,21 +146,30 @@ export class ComputerMoveService {
         } else {
           let antiCaptureFiltered = false;
           const legalMovesCopy = this.legalMovesBank.slice(0);
+
+          // Iterating over each move string, comprising of piece initial coords
+          // with all possible final coords concatenated to it
           legalMovesCopy.forEach((lMove) => {
             const nMoveUnpacker = this.boardService.normalMoveUnpacker(lMove);
             const [initRow, initCol] = nMoveUnpacker.initCoordinates;
 
+            // Iterating over the concatenated final coords for each piece
             nMoveUnpacker.finalCoordsPure.forEach((fCoord) => {
               const [finalRow, finalCol] = fCoord;
+              if (initRow === 7 && initCol === 4) {
+                console.log(`Cell ${finalRow}${finalCol}`);
+                console.log('this.legalMovesBank on final coords start = ' + this.legalMovesBank);
+              }
+
               const isCaptureProne = this.movesAnalyser.captureRisk(initRow, initCol, this.boardService.board,
                   this.shared.playerPrefix, finalRow, finalCol);
               const iCoordRaw = `${initRow}. ${initCol}`;
               if (isCaptureProne) {
+                /* Handling a move that results in a direct capture */
                 let numberOfAlternativeMoves: number;
                 let index: number;
                 const [fRow, fCol] = fCoord;
                 const fCoordRaw = `${fRow}. ${fCol}`;
-                let lMoveCopy = lMove;
                 antiCaptureFiltered = true;
 
                 // Check if this capture prone move can act as a baiting attack move instead
@@ -191,14 +200,24 @@ export class ComputerMoveService {
                   const x = this.legalMovesBank.splice(index, 1);
                 } else {
                   // The piece has more than one alternative moves
-                  if (lMoveCopy.endsWith(fCoordRaw)) {
+                  if (lMove.endsWith(fCoordRaw)) {
                     // Remove this alternative move together with its preceeding comma
-                    lMoveCopy = lMoveCopy.replace(',' + fCoordRaw, '');
-                    const x = this.legalMovesBank.splice(index, 1, lMoveCopy);
+                    lMove = lMove.replace(',' + fCoordRaw, '');
+                    const x = this.legalMovesBank.splice(index, 1, lMove);
+                    if (initRow === 7 && initCol === 4) {
+                      console.log(`Cell ${finalRow}${finalCol}`);
+                      console.log('this.legalMovesBank = ' + this.legalMovesBank);
+                    }
+
                   } else {
                     // Remove this alternative move together with its trailing comma
-                    lMoveCopy = lMoveCopy.replace(fCoordRaw + ',', '');
-                    const x = this.legalMovesBank.splice(index, 1, lMoveCopy);
+                    lMove = lMove.replace(fCoordRaw + ',', '');
+                    const x = this.legalMovesBank.splice(index, 1, lMove);
+                    if (initRow === 7 && initCol === 4) {
+                      console.log(`Cell ${finalRow}${finalCol}`);
+                      console.log('this.legalMovesBank = ' + this.legalMovesBank);
+                    }
+
                   }
                 }
               }
@@ -206,8 +225,6 @@ export class ComputerMoveService {
           });
 
           if (this.attackMoves.length > 0) {
-            console.log('Attack moves iri sei = ' + this.attackMoves);
-            console.log('Attack moves length = ' + this.attackMoves.length);
             this.monkeyStyle(this.attackMoves);
             return;
           }
@@ -220,7 +237,7 @@ export class ComputerMoveService {
               // All attempted moves will result in a capture, so just play any move
               this.monkeyStyle(legalMovesCopy);
             }
-        } else {
+          } else {
             this.monkeyStyle(legalMovesCopy);
           }
           antiCaptureFiltered = false;

@@ -10,8 +10,8 @@ export class MovesAnalyserService {
   isEmpty = 'isEmpty';
   isEnemy = 'isEnemy';
   isFriend = 'isFriend';
-  isEnemyKing = 'isEnemyKing';
-  isFriendKing = 'isFriendKing';
+  isEnemyKing = `${this.isEnemy}${this.kingSuffix}`;
+  isFriendKing = `${this.isFriend}${this.kingSuffix}`;
 
   constructor(private shared: SharedService, private board: BoardService) {}
 
@@ -417,6 +417,14 @@ export class MovesAnalyserService {
           }
         }
       }
+
+      // if (initRow === 7 && initCol === 4) {
+      //   console.log(`Cell ${finalRow}${finalCol}`);
+      //   console.log((topLeft === this.isEmpty && (bottomRight !== undefined && bottomRight.includes(this.isEnemy))))
+      //   console.log((topRight === this.isEmpty && (bottomLeft !== undefined && bottomLeft.includes(this.isEnemy))))
+      //   console.log((bottomRight === this.isEmpty && (topLeft !== undefined && topLeft.includes(this.isEnemy))))
+      //   console.log((bottomLeft === this.isEmpty && (topRight !== undefined && topRight.includes(this.isEnemy))))
+      // }
 
       if ((topLeft === this.isEmpty && (bottomRight !== undefined && bottomRight.includes(this.isEnemy))) ||
           (topRight === this.isEmpty && (bottomLeft !== undefined && bottomLeft.includes(this.isEnemy))) ||

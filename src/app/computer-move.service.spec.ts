@@ -126,4 +126,42 @@ describe('ComputerMoveService', () => {
     expect(compMoves.legalMovesBank).toEqual(['2. 3:3. 2']);
   });
 
+  it('King piece should avoid endangering itself', () => {
+    boardService.board[1][2].setAttribute('id', 'computer-2');
+    boardService.board[2][1].setAttribute('id', 'computer-3');
+    boardService.board[1][6].setAttribute('id', 'computer-8');
+    boardService.board[2][3].setAttribute('id', 'computer-4');
+    boardService.board[2][7].setAttribute('id', 'computer-5');
+    boardService.board[3][2].setAttribute('id', 'computer-6');
+    boardService.board[7][4].setAttribute('id', 'computerKing-1'); // mainPiece
+
+    boardService.board[0][3].setAttribute('id', 'playerKing-3');
+    boardService.board[3][0].setAttribute('id', 'player-1');
+    boardService.board[4][1].setAttribute('id', 'player-3');
+    boardService.board[4][3].setAttribute('id', 'player-4');
+    boardService.board[5][0].setAttribute('id', 'player-5');
+    boardService.board[5][4].setAttribute('id', 'player-2');
+    boardService.board[6][1].setAttribute('id', 'player-6');
+    boardService.board[6][7].setAttribute('id', 'player-8');
+    boardService.board[7][0].setAttribute('id', 'player-7');
+
+    const mainPiece = new Piece('computerKing-1', 7, 4, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computeriece1 = new Piece('computer-4', 2, 3, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computerPiece2 = new Piece('computer-8', 1, 6, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    const playerPiece1 = new Piece('playerKing-3', 0, 3, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece2 = new Piece('player-2', 5, 4, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    sharedService.computerTurn = true;
+    sharedService.computerPokers = [mainPiece, computeriece1, computerPiece2];
+    sharedService.playerPokers = [playerPiece1, playerPiece2];
+    compMoves.computerMove();
+    expect(compMoves.legalMovesBank).toEqual(['7. 4:4. 7']);
+  });
+
+
 });
