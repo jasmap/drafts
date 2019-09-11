@@ -16,7 +16,7 @@ import { Player } from '../player';
 
   <table id="grid" (click) = "pieceManager($event)"></table>
   <div class="box">
-      <a (click) = "boardSetup($event)" class="push_button blue">New Game</a>
+      <a href="index.html" class="push_button blue">New Game</a>
   </div>
 </section>
 `,
