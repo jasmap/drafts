@@ -353,5 +353,41 @@ describe('AttackService', () => {
     expect(compMoves.preferredResponse).toEqual('1. 4:');
   });
 
+  it(`should be able to choose an attacking move even if the baiting
+      piece have multiple options and the follow-up moves have multiple
+      responses`, () => {
+    boardService.board[1][0].setAttribute('id', 'computer-7');
+    boardService.board[1][2].setAttribute('id', 'computer-6');
+    boardService.board[1][4].setAttribute('id', 'computer-5');
+    boardService.board[2][1].setAttribute('id', 'computer-4');
+    boardService.board[2][3].setAttribute('id', 'computer-8');
+    boardService.board[3][2].setAttribute('id', 'computer-1');  // mainPiece
+    boardService.board[3][4].setAttribute('id', 'computer-9');
+    boardService.board[3][6].setAttribute('id', 'computer-10');
+    boardService.board[4][7].setAttribute('id', 'computer-11');
+
+
+    boardService.board[3][0].setAttribute('id', 'player-1');
+    boardService.board[2][7].setAttribute('id', 'player-2');
+    boardService.board[4][5].setAttribute('id', 'player-3');
+    boardService.board[5][0].setAttribute('id', 'player-4');
+    boardService.board[5][2].setAttribute('id', 'player-5');
+    boardService.board[5][4].setAttribute('id', 'player-6');
+    boardService.board[5][6].setAttribute('id', 'player-7');
+    boardService.board[6][5].setAttribute('id', 'player-8');
+
+    const mainPiece = new Piece('computer-1', 3, 2, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computeriece1 = new Piece('computer-5', 1, 4, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computerPiece2 = new Piece('computer-9', 3, 4, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    sharedService.computerTurn = true;
+    sharedService.computerPokers = [mainPiece, computeriece1, computerPiece2];
+    compMoves.computerMove();
+    expect(compMoves.attackMoves.sort()).toEqual(['3. 2:4. 3multipleparallel', '3. 2:4. 1multipleparallel'].sort());
+  });
+
 
 });

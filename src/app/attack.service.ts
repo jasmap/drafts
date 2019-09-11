@@ -204,7 +204,8 @@ export class AttackService {
         supporter = topSibling;
         sniper = topRightSniperL2;
       }
-      return initialSpot === isEmpty && supporter.includes(isFriend) &&
+      return initialSpot === isEmpty &&
+      (supporter !== undefined && supporter.includes(isFriend)) &&
       (sniper === undefined || sniper.includes(isFriend));
     };
 
@@ -502,9 +503,9 @@ export class AttackService {
        * Checks for the enemy pieces formation necessary for a skewed bait attack
        */
       const enemyFormationCheck = () => {
-        if (shortArmTop.includes(isEnemy)) {
-          const normalPieceRequirement = (longArmTop.includes(isEnemy) && longArmGuard === isEmpty ) ||
-            (seriesCrossFire.includes(isEnemy) && seriesCrossFireGuard === isEmpty);
+        if (shortArmTop !== undefined && shortArmTop.includes(isEnemy)) {
+          const normalPieceRequirement = ((longArmTop !== undefined && longArmTop.includes(isEnemy)) && longArmGuard === isEmpty ) ||
+            (seriesCrossFire !== undefined && seriesCrossFire.includes(isEnemy) && seriesCrossFireGuard === isEmpty);
           if (shortArmTop === isEnemy) {
             return normalPieceRequirement;
           } else {

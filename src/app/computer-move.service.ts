@@ -102,9 +102,6 @@ export class ComputerMoveService {
         } else {
 
           directCaptureAvoidance(currentThreats, this.shared.captureMoves);
-          console.log('captureMoves = ' + this.shared.captureMoves);
-          console.log('captureMoves.length = ' + this.shared.captureMoves.length);
-          console.log('priorityMoves.length = ' + priorityMoves.length);
           if (priorityMoves.length > 0) {
               // Counter the intended capture by capturing the threatening piece.
               this.forceCapture(priorityMoves[Math.floor(Math.random() * priorityMoves.length)]);
@@ -170,7 +167,6 @@ export class ComputerMoveService {
                 if (this.attack.frontalBait(fRow, fCol, this.boardService.board,
                     this.shared.playerPrefix, initRow, initCol)) {
                   let prunedMove: string;
-                  console.log(this.attack.multiResponsesTag);
                   if (this.attack.multiResponsesTag) {
                     // Mark this baiting move as having multiple responses
                     prunedMove = `${iCoordRaw}:${fCoordRaw}${this.attack.multiResponsesTag}`;
@@ -210,6 +206,8 @@ export class ComputerMoveService {
           });
 
           if (this.attackMoves.length > 0) {
+            console.log('Attack moves iri sei = ' + this.attackMoves);
+            console.log('Attack moves length = ' + this.attackMoves.length);
             this.monkeyStyle(this.attackMoves);
             return;
           }
@@ -299,30 +297,40 @@ export class ComputerMoveService {
    * Randomly selects and plays a move given an array of available moves.
    */
   monkeyStyle(movesPool: string[]) {
+    let direction: string;
     let needSpecificResponse = false;
-    let selectedMove = movesPool[Math.floor(Math.random() * movesPool.length)];
+    let tag = '';
 
-    // Check if this move requires a specific follow up response
-    if (selectedMove.includes(this.attack.multiResponsesTag)) {
-      selectedMove = selectedMove.replace(this.attack.multiResponsesTag, '');
-      needSpecificResponse = true;
-    }
+    /**
+     * Removes the multi-reponse tag from a move
+     */
+    const moveSanitiser = (move: string) => {
+      if (move.includes(this.attack.multiResponsePrefix)) {
+        tag += this.attack.multiResponsePrefix;
+        move = move.replace(this.attack.multiResponsePrefix, '');
+        if (move.includes(this.attack.parallelMove)) {
+          direction = this.attack.parallelMove;
+          tag += this.attack.parallelMove;
+          move = move.replace(this.attack.parallelMove, '');
+        } else if (move.includes(this.attack.crossMove)) {
+          direction = this.attack.crossMove;
+          tag += this.attack.crossMove;
+          move = move.replace(this.attack.crossMove, '');
+        }
+        needSpecificResponse = true;
+      }
+      this.attack.resetMultipleResponseTag();
+      return move;
+    };
 
-    const moveString = this.boardService.normalMoveUnpacker(selectedMove);
+    const selectedMove = movesPool[Math.floor(Math.random() * movesPool.length)];
+
+    const moveString = this.boardService.normalMoveUnpacker(moveSanitiser(selectedMove));
     const [rowInit, colInit] = moveString.initCoordinates;
     const [rowFinal, colFinal] = moveString.finalCoordsPure[
         Math.floor(Math.random() * moveString.finalCoordsPure.length)];
 
     if (needSpecificResponse) {
-      let direction: string;
-      if (this.attack.multiResponsesTag.includes(this.attack.parallelMove)) {
-        direction = this.attack.parallelMove;
-      } else if (this.attack.multiResponsesTag.includes(this.attack.crossMove)) {
-        direction = this.attack.crossMove;
-      }
-
-      this.attack.resetMultipleResponseTag();
-
       const deltaMove = Math.abs(+`${rowFinal}${colFinal}` - +`${rowInit}${colInit}`);
       if (direction === this.attack.parallelMove) {
         if (deltaMove === 11) {
