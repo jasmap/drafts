@@ -57,7 +57,7 @@ export class MovesAnalyserService {
     colY = col + 1;
     while ( rowX >= 0 && colY <= 7) {
       const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-      if (cellStatus !== undefined && cellStatus.includes(this.isEnemy)) {
+      if (cellStatus && cellStatus.includes(this.isEnemy)) {
           if ( rowX - 1 >= 0 && colY + 1 <= 7) {
               // Victim piece not on edge of board
               if (this.cellOwnerChecking( rowX - 1, colY + 1, board, enemyPrefix) === this.isEmpty) {
@@ -66,7 +66,7 @@ export class MovesAnalyserService {
                   return true;
               }
           }
-      } else if (cellStatus === this.isFriend) {
+      } else if (cellStatus && cellStatus.includes(this.isFriend)) {
           // Friendly piece, stop querying
           return false;
       }
@@ -89,7 +89,7 @@ export class MovesAnalyserService {
     colY = col - 1;
     while ( rowX <= 7 && colY >= 0) {
       const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-      if (cellStatus !== undefined && cellStatus.includes(this.isEnemy)) {
+      if (cellStatus && cellStatus.includes(this.isEnemy)) {
         // Victim piece must not be on edge of board
         if ( rowX + 1 <= 7 && colY - 1 >= 0) {
           if (this.cellOwnerChecking( rowX + 1, colY - 1, board, enemyPrefix) === this.isEmpty) {
@@ -97,7 +97,7 @@ export class MovesAnalyserService {
             return true;
           }
         }
-      } else if (cellStatus === this.isFriend) {
+      } else if (cellStatus && cellStatus.includes(this.isFriend)) {
         // Friendly piece, stop querying
         return false;
       }
@@ -121,7 +121,7 @@ export class MovesAnalyserService {
       colY = col - 1;
       while ( rowX >= 0 && colY >= 0) {
           const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-          if (cellStatus !== undefined && cellStatus.includes(this.isEnemy)) {
+          if (cellStatus && cellStatus.includes(this.isEnemy)) {
               // Victim piece must not be on edge of board
               if ( rowX - 1 >= 0 && colY - 1 >= 0) {
                   if (this.cellOwnerChecking( rowX - 1, colY - 1, board, enemyPrefix) === this.isEmpty) {
@@ -130,7 +130,7 @@ export class MovesAnalyserService {
                       return true;
                   }
               }
-          } else if (cellStatus === this.isFriend) {
+          } else if (cellStatus && cellStatus.includes(this.isFriend)) {
               // Friendly piece, stop querying
               return false;
           }
@@ -153,7 +153,7 @@ export class MovesAnalyserService {
       colY = col + 1;
       while ( rowX <= 7 && colY <= 7) {
           const cellStatus = this.cellOwnerChecking( rowX, colY, board, enemyPrefix);
-          if (cellStatus !== undefined && cellStatus.includes(this.isEnemy)) {
+          if (cellStatus && cellStatus.includes(this.isEnemy)) {
               // Victim piece must not be on edge of board
               if ( rowX + 1 <= 7 && colY + 1 <= 7) {
                   if (this.cellOwnerChecking( rowX + 1, colY + 1, board, enemyPrefix) === this.isEmpty) {
@@ -162,7 +162,7 @@ export class MovesAnalyserService {
                       return true;
                   }
               }
-          } else if (cellStatus === this.isFriend) {
+          } else if (cellStatus && cellStatus.includes(this.isFriend)) {
               // Friendly piece, stop querying
               return false;
           }
@@ -446,18 +446,30 @@ export class MovesAnalyserService {
           const bottomRightSniperS = this.bottomRightSniperSCell(finalRow, finalCol, board, enemyPrefix);
           const topLeftSniperS = this.topLeftSniperSCell(finalRow, finalCol, board, enemyPrefix);
 
-          if ((bottomRightSniperL1 === this.isEnemy && rightSibling === this.isFriend && topRight === this.isEmpty) ||
-              (bottomLeftSniperL1 === this.isEnemy && leftSibling === this.isFriend && topLeft === this.isEmpty) ||
-              (topLeftSniperL1 === this.isEnemy && rightSibling === this.isFriend && bottomRight === this.isEmpty) ||
-              (topRightSniperL1 === this.isEnemy && leftSibling === this.isFriend && bottomLeft === this.isEmpty) ||
-              (bottomRightSniperL2 === this.isEnemy && bottomSibling === this.isFriend && bottomLeft === this.isEmpty) ||
-              (bottomLeftSniperL2 === this.isEnemy && bottomSibling === this.isFriend && bottomRight === this.isEmpty) ||
-              (topRightSniperL2 === this.isEnemy && topSibling === this.isFriend && topLeft === this.isEmpty) ||
-              (topLeftSniperL2 === this.isEnemy && topSibling === this.isFriend && topRight === this.isEmpty) ||
-              (topRightSniperS === this.isEnemy && farTopRight === this.isFriend && topRight === this.isEmpty) ||
-              (bottomLeftSniperS === this.isEnemy && farBottomLeft === this.isFriend && bottomLeft === this.isEmpty) ||
-              (bottomRightSniperS === this.isEnemy && farBottomRight === this.isFriend && bottomRight === this.isEmpty) ||
-              (topLeftSniperS === this.isEnemy && farTopLeft === this.isFriend && topLeft === this.isEmpty)) {
+          if (((bottomRightSniperL1 !== undefined && rightSibling !== undefined) &&
+              (bottomRightSniperL1.includes(this.isEnemy) && rightSibling.includes(this.isFriend) && topRight === this.isEmpty)) ||
+              ((bottomLeftSniperL1 !== undefined && leftSibling !== undefined) &&
+              (bottomLeftSniperL1.includes(this.isEnemy) && leftSibling.includes(this.isFriend) && topLeft === this.isEmpty)) ||
+              ((topLeftSniperL1 !== undefined && rightSibling !== undefined) &&
+              (topLeftSniperL1.includes(this.isEnemy) && rightSibling.includes(this.isFriend) && bottomRight === this.isEmpty)) ||
+              ((topRightSniperL1 !== undefined && leftSibling !== undefined) &&
+              (topRightSniperL1.includes(this.isEnemy) && leftSibling.includes(this.isFriend) && bottomLeft === this.isEmpty)) ||
+              ((bottomRightSniperL2 !== undefined && bottomSibling !== undefined) &&
+              (bottomRightSniperL2.includes(this.isEnemy) && bottomSibling.includes(this.isFriend) && bottomLeft === this.isEmpty)) ||
+              ((bottomLeftSniperL2 !== undefined && bottomSibling !== undefined) &&
+              (bottomLeftSniperL2.includes(this.isEnemy) && bottomSibling.includes(this.isFriend) && bottomRight === this.isEmpty)) ||
+              ((topRightSniperL2 !== undefined && topSibling !== undefined) &&
+              (topRightSniperL2.includes(this.isEnemy) && topSibling.includes(this.isFriend) && topLeft === this.isEmpty)) ||
+              ((topLeftSniperL2 !== undefined && topSibling !== undefined) &&
+              (topLeftSniperL2.includes(this.isEnemy) && topSibling.includes(this.isFriend) && topRight === this.isEmpty)) ||
+              ((topRightSniperS !== undefined && farTopRight !== undefined) &&
+              (topRightSniperS.includes(this.isEnemy) && farTopRight.includes(this.isFriend) && topRight === this.isEmpty)) ||
+              ((bottomLeftSniperS !== undefined && farBottomLeft !== undefined) &&
+              (bottomLeftSniperS.includes(this.isEnemy) && farBottomLeft.includes(this.isFriend) && bottomLeft === this.isEmpty)) ||
+              ((bottomRightSniperS !== undefined && farBottomRight !== undefined) &&
+              (bottomRightSniperS.includes(this.isEnemy) && farBottomRight.includes(this.isFriend) && bottomRight === this.isEmpty)) ||
+              ((topLeftSniperS !== undefined && farTopLeft !== undefined) &&
+              (topLeftSniperS.includes(this.isEnemy) && farTopLeft.includes(this.isFriend) && topLeft === this.isEmpty))) {
               // This move will leave friend to be captured
               return true;
           }
