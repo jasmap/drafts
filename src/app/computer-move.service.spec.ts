@@ -126,7 +126,7 @@ describe('ComputerMoveService', () => {
     expect(compMoves.legalMovesBank).toEqual(['2. 3:3. 2']);
   });
 
-  it('King piece should avoid endangering itself', () => {
+  it('King piece should avoid endangering itself when moving from a safe position', () => {
     boardService.board[1][2].setAttribute('id', 'computer-2');
     boardService.board[2][1].setAttribute('id', 'computer-3');
     boardService.board[1][6].setAttribute('id', 'computer-8');
@@ -162,6 +162,43 @@ describe('ComputerMoveService', () => {
     compMoves.computerMove();
     expect(compMoves.legalMovesBank).toEqual(['7. 4:4. 7']);
   });
+
+  it('King piece should avoid endangering itself even when moving away from a fired position', () => {
+    boardService.board[6][5].setAttribute('id', 'computerKing-1'); // mainPiece
+
+    boardService.board[0][3].setAttribute('id', 'playerKing-1');
+    boardService.board[0][7].setAttribute('id', 'playerKing-2');
+    boardService.board[3][0].setAttribute('id', 'player-5');
+    boardService.board[4][5].setAttribute('id', 'player-4');
+    boardService.board[4][7].setAttribute('id', 'playerKing-3');
+    boardService.board[7][4].setAttribute('id', 'player-6');
+
+    const mainPiece = new Piece('computerKing-1', 6, 5, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    const playerPiece1 = new Piece('playerKing-1', 0, 3, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece2 = new Piece('playerKing-2', 0, 7, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece3 = new Piece('playerKing-3', 4, 7, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece4 = new Piece('player-5', 3, 0, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece5 = new Piece('player-4', 4, 5, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece6 = new Piece('player-6', 7, 4, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    sharedService.computerTurn = true;
+    sharedService.computerPokers = [mainPiece];
+    sharedService.playerPokers = [
+      playerPiece1, playerPiece2, playerPiece3,
+      playerPiece4, playerPiece5, playerPiece6
+    ];
+    compMoves.computerMove();
+    expect(compMoves.evasiveMoves).toEqual(['6. 5:7. 6,3. 2,1. 0']);
+  });
+
 
 
 });

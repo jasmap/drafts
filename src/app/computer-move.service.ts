@@ -10,6 +10,13 @@ import { AttackService } from './attack.service';
 })
 export class ComputerMoveService {
   attackMoves: string[] = [];
+
+  /**
+   * Contains the piece that is preferred to be moved at a particular moment.
+   *
+   * Usually this comes about because of orchestrated moves that must follow
+   * a preplanned attacking sequence
+   */
   preferredResponse: string;
 
   /**
@@ -32,6 +39,7 @@ export class ComputerMoveService {
    * Computer selects and moves an appropriate piece.
    */
   computerMove() {
+    let safeMoves: boolean;
     this.attackMoves = [];
     this.legalMovesBank = [];
     const currentThreats = this.threats();
@@ -48,7 +56,86 @@ export class ComputerMoveService {
     };
 
     /**
-     * Tries to avoid a capture, either by moving or protecting the endangered piece.
+     * Handles a capture prone move
+     *
+     * Does all the analysis of a move that results in an immediate direct capture,
+     * including checking for baiting opportunites, tagging a baiting move
+     * that will have multiple follow-up moves and filtering the available moves
+     * array to reflect only beneficial moves. It returns a mutated move string and moves array if
+     * the current final coordinates will result in a direct capture of that piece
+     * or friendly pieces, otherwise it just spits the move and moves array as is.
+     *
+     * @param iRow - initial piece row coordinate
+     * @param iCol - initial piece column coordinate
+     * @param board - array[8][8], representing the playing board
+     * @param opponentPrefix - opponent name
+     * @param fRow - final piece row coordinate
+     * @param fCol - final piece column coordinate
+     * @param move - the complete raw move under scrutiny
+     */
+    const captureProneMoveHandler = (iRow: number, iCol: number, board: any[],
+                                     opponentPrefix: string, fRow: number, fCol: number,
+                                     move: string, moves: string[]) => {
+      const isCaptureProne = this.movesAnalyser.captureRisk(iRow, iCol, board,
+      opponentPrefix, fRow, fCol);
+      if (isCaptureProne) {
+        let numberOfAlternativeMoves: number;
+        let index: number;
+        const iCoordRaw = `${iRow}. ${iCol}`;
+        const fCoordRaw = `${fRow}. ${fCol}`;
+        safeMoves = true;
+
+        // Check if this capture prone move can act as a baiting attack move instead
+        if (this.attack.frontalBait(fRow, fCol, this.boardService.board,
+                                    opponentPrefix, iRow, iCol)) {
+          let prunedMove: string;
+          if (this.attack.multiResponsesTag) {
+            // Mark this baiting move as having multiple responses
+            prunedMove = `${iCoordRaw}:${fCoordRaw}${this.attack.multiResponsesTag}`;
+          } else {
+            prunedMove = `${iCoordRaw}:${fCoordRaw}`;
+          }
+          this.attackMoves.push(prunedMove);
+        }
+
+        // Deduce the number of possible moves the identified capture prone piece can move
+        for (const mv of this.legalMovesBank) {
+          if (mv.startsWith(iCoordRaw + ':')) {
+            const nMvUnpk = this.boardService.normalMoveUnpacker(mv);
+            index = moves.indexOf(mv);
+            numberOfAlternativeMoves = nMvUnpk.finalCoordsRaw.length;
+            break;
+          }
+        }
+
+        if (numberOfAlternativeMoves === 1) {
+          // Just remove the whole move from the moves bank
+          const x = moves.splice(index, 1);
+        } else {
+          // The piece has more than one alternative moves
+          if (move.endsWith(fCoordRaw)) {
+            // Remove this alternative final coordinates string together with its preceeding comma
+            move = move.replace(',' + fCoordRaw, '');
+            const x = moves.splice(index, 1, move);
+          } else {
+            // Remove this alternative final coordinates string together with its trailing comma
+            move = move.replace(fCoordRaw + ',', '');
+            const x = moves.splice(index, 1, move);
+          }
+        }
+      }
+      if (iRow === 6 && iCol === 5) {
+        console.log('65 moves = ' + moves);
+      }
+      return {
+        move,
+        moves
+      };
+    };
+
+    /**
+     * Tries to save a friendly piece which is under fire, either by moving or
+     * protecting the endangered piece.
      *
      * @param threatsBank - an array of enemy moves, that are capable of capturing friendly pieces
      * @param availableMoves - an array of legal moves at the disposal of friendly pieces
@@ -66,14 +153,14 @@ export class ComputerMoveService {
         for (const move of availableMoves) {
           for (const landingSpot of landingCoordsAfterCapture) {
             if (move.includes(landingSpot) && !move.includes(threatenedPieceCoord) && !move.includes('x')) {
-                if (availableMoves.indexOf(move) !== -1) {
-                  // This move could protect the endangered piece by blocking the landing cell of
-                  // the capturing piece.
-                  priorityMoves.push(availableMoves.indexOf(move));
-                  // Replaces the move with a more direct one
-                  availableMoves.splice(availableMoves.indexOf(move), 1,
-                    moveAssembler(this.boardService.normalMoveUnpacker(move).initCoordsRaw, landingSpot));
-                }
+              if (availableMoves.indexOf(move) !== -1) {
+                // This move could protect the endangered piece by blocking the landing cell of
+                // the capturing piece.
+                priorityMoves.push(availableMoves.indexOf(move));
+                // Replaces the move with a more direct one
+                availableMoves.splice(availableMoves.indexOf(move), 1,
+                  moveAssembler(this.boardService.normalMoveUnpacker(move).initCoordsRaw, landingSpot));
+              }
             }
           }
           if (move.includes(threatenedPieceCoord)) {
@@ -84,6 +171,45 @@ export class ComputerMoveService {
           }
         }
       }
+    };
+
+    /**
+     * Launches a baiting attack if present
+     */
+    const launchBaitingAttack = () => {
+      if (this.attackMoves.length > 0) {
+        this.monkeyStyle(this.attackMoves);
+        return true;
+      }
+      return false;
+    };
+
+    /**
+     * Disects a move and decides what to do depending on the findings
+     *
+     * @param moves - moves to be disected
+     * @param movesCopy - copy of moves
+     */
+    const moveDisector = (moves: string[], movesCopy: string[]) => {
+      safeMoves = false;
+      // Iterating over each move string, comprising of piece initial coords
+      // with all possible final coords concatenated to it
+      movesCopy.forEach((lMove) => {
+        const nMoveUnpacker = this.boardService.normalMoveUnpacker(lMove);
+        const [initRow, initCol] = nMoveUnpacker.initCoordinates;
+
+        // Iterating over the concatenated final coords for each piece
+        nMoveUnpacker.finalCoordsPure.forEach((fCoord) => {
+          let dict: { move: string; moves: string[]; };
+          const [finalRow, finalCol] = fCoord;
+          dict = captureProneMoveHandler(initRow, initCol, this.boardService.board,
+                                        this.shared.playerPrefix, finalRow, finalCol,
+                                        lMove, moves);
+          lMove = dict.move;
+          moves = dict.moves;
+        });
+      });
+      return { moves };
     };
 
     this.legalMovesCompilation(this.shared.computerPokers, this.legalMovesBank);
@@ -122,21 +248,14 @@ export class ComputerMoveService {
           });
 
           const evasiveMovesCopy = this.evasiveMoves.slice(0);
-          evasiveMovesCopy.forEach((eMove) => {
-              const nMoveUnpacker = this.boardService.normalMoveUnpacker(eMove);
-              const [initRow, initCol] = nMoveUnpacker.initCoordinates;
-              nMoveUnpacker.finalCoordsPure.forEach((fCoord) => {
-                const [finalRow, finalCol] = fCoord;
-                if (this.movesAnalyser.captureRisk(initRow, initCol, this.boardService.board,
-                    this.shared.playerPrefix, finalRow, finalCol)) {
-                      // Remove the capture prone move from the list of priority evasive moves
-                      const index = this.evasiveMoves.indexOf(eMove);
-                      this.evasiveMoves.splice(index, 1);
-                  }
-              });
-          });
-          if (this.evasiveMoves.length > 0 && this.evasiveMoves.length < evasiveMovesCopy.length) {
-            // Capture prone evasive moves have been filtered out
+
+          moveDisector(this.evasiveMoves, evasiveMovesCopy);
+
+          if (launchBaitingAttack()) {
+            return;
+          }
+
+          if (this.evasiveMoves.length > 0) {
             this.monkeyStyle(this.evasiveMoves);
           } else {
             // All attempted evasive moves will result in a capture, so just play any evasive move
@@ -144,92 +263,15 @@ export class ComputerMoveService {
           }
 
         } else {
-          let antiCaptureFiltered = false;
           const legalMovesCopy = this.legalMovesBank.slice(0);
 
-          // Iterating over each move string, comprising of piece initial coords
-          // with all possible final coords concatenated to it
-          legalMovesCopy.forEach((lMove) => {
-            const nMoveUnpacker = this.boardService.normalMoveUnpacker(lMove);
-            const [initRow, initCol] = nMoveUnpacker.initCoordinates;
+          moveDisector(this.legalMovesBank, legalMovesCopy);
 
-            // Iterating over the concatenated final coords for each piece
-            nMoveUnpacker.finalCoordsPure.forEach((fCoord) => {
-              const [finalRow, finalCol] = fCoord;
-              if (initRow === 7 && initCol === 4) {
-                console.log(`Cell ${finalRow}${finalCol}`);
-                console.log('this.legalMovesBank on final coords start = ' + this.legalMovesBank);
-              }
-
-              const isCaptureProne = this.movesAnalyser.captureRisk(initRow, initCol, this.boardService.board,
-                  this.shared.playerPrefix, finalRow, finalCol);
-              const iCoordRaw = `${initRow}. ${initCol}`;
-              if (isCaptureProne) {
-                /* Handling a move that results in a direct capture */
-                let numberOfAlternativeMoves: number;
-                let index: number;
-                const [fRow, fCol] = fCoord;
-                const fCoordRaw = `${fRow}. ${fCol}`;
-                antiCaptureFiltered = true;
-
-                // Check if this capture prone move can act as a baiting attack move instead
-                if (this.attack.frontalBait(fRow, fCol, this.boardService.board,
-                    this.shared.playerPrefix, initRow, initCol)) {
-                  let prunedMove: string;
-                  if (this.attack.multiResponsesTag) {
-                    // Mark this baiting move as having multiple responses
-                    prunedMove = `${iCoordRaw}:${fCoordRaw}${this.attack.multiResponsesTag}`;
-                  } else {
-                    prunedMove = `${iCoordRaw}:${fCoordRaw}`;
-                  }
-                  this.attackMoves.push(prunedMove);
-                }
-
-                // Deduce the number of possible moves the identified capture prone piece can move
-                for (const move of this.legalMovesBank) {
-                  if (move.startsWith(iCoordRaw + ':')) {
-                    const nMvUnpk = this.boardService.normalMoveUnpacker(move);
-                    index = this.legalMovesBank.indexOf(move);
-                    numberOfAlternativeMoves = nMvUnpk.finalCoordsRaw.length;
-                    break;
-                  }
-                }
-
-                if (numberOfAlternativeMoves === 1) {
-                  // Just remove the whole move from the moves bank
-                  const x = this.legalMovesBank.splice(index, 1);
-                } else {
-                  // The piece has more than one alternative moves
-                  if (lMove.endsWith(fCoordRaw)) {
-                    // Remove this alternative move together with its preceeding comma
-                    lMove = lMove.replace(',' + fCoordRaw, '');
-                    const x = this.legalMovesBank.splice(index, 1, lMove);
-                    if (initRow === 7 && initCol === 4) {
-                      console.log(`Cell ${finalRow}${finalCol}`);
-                      console.log('this.legalMovesBank = ' + this.legalMovesBank);
-                    }
-
-                  } else {
-                    // Remove this alternative move together with its trailing comma
-                    lMove = lMove.replace(fCoordRaw + ',', '');
-                    const x = this.legalMovesBank.splice(index, 1, lMove);
-                    if (initRow === 7 && initCol === 4) {
-                      console.log(`Cell ${finalRow}${finalCol}`);
-                      console.log('this.legalMovesBank = ' + this.legalMovesBank);
-                    }
-
-                  }
-                }
-              }
-            });
-          });
-
-          if (this.attackMoves.length > 0) {
-            this.monkeyStyle(this.attackMoves);
+          if (launchBaitingAttack()) {
             return;
           }
 
-          if (antiCaptureFiltered) {
+          if (safeMoves) {
             if (this.legalMovesBank.length > 0) {
               // Capture prone moves have been filtered out
               this.monkeyStyle(this.legalMovesBank);
@@ -240,7 +282,7 @@ export class ComputerMoveService {
           } else {
             this.monkeyStyle(legalMovesCopy);
           }
-          antiCaptureFiltered = false;
+          safeMoves = false;
         }
       }
     } else {

@@ -178,7 +178,8 @@ export class AttackService {
         supporter = topSibling;
         sniper = topLeftSniperL2;
       }
-      return initialSpot === isEmpty && supporter.includes(isFriend) &&
+      return initialSpot === isEmpty &&
+      (supporter !== undefined && supporter.includes(isFriend)) &&
       (sniper === undefined || sniper.includes(isFriend));
     };
 
