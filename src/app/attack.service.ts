@@ -517,7 +517,7 @@ export class AttackService {
       };
 
       return transitCell === isEmpty &&
-            (baitSpoilerCell === isEmpty || baitSpoilerCell.includes(isFriend)) &&
+            (baitSpoilerCell !== undefined && (baitSpoilerCell === isEmpty || baitSpoilerCell.includes(isFriend))) &&
             attackingFormationCheck() && enemyFormationCheck();
     };
 

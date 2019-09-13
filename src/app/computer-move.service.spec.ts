@@ -199,6 +199,33 @@ describe('ComputerMoveService', () => {
     expect(compMoves.evasiveMoves).toEqual(['6. 5:7. 6,3. 2,1. 0']);
   });
 
+  it('King piece should not throw an error when moving away from a fired position', () => {
+    boardService.board[5][6].setAttribute('id', 'computerKing-1'); // mainPiece
+    boardService.board[2][7].setAttribute('id', 'computer-2');
 
+    boardService.board[3][0].setAttribute('id', 'playerKing-1');
+    boardService.board[4][7].setAttribute('id', 'playerKing-2');
+    boardService.board[5][4].setAttribute('id', 'player-6');
+
+    const mainPiece = new Piece('computerKing-1', 5, 6, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const computerPiece1 = new Piece('computer-2', 2, 7, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    const playerPiece1 = new Piece('playerKing-1', 3, 0, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece2 = new Piece('playerKing-2', 4, 7, true, sharedService,
+    boardService, movesAnalyser, compMoves);
+    const playerPiece3 = new Piece('player-6', 5, 4, false, sharedService,
+    boardService, movesAnalyser, compMoves);
+
+    sharedService.computerTurn = true;
+    sharedService.computerPokers = [mainPiece, computerPiece1];
+    sharedService.playerPokers = [
+      playerPiece1, playerPiece2, playerPiece3
+    ];
+    compMoves.computerMove();
+    expect(compMoves.evasiveMoves).toEqual(['5. 6:6. 7,3. 4,2. 3,0. 1']);
+  });
 
 });
