@@ -124,9 +124,7 @@ export class ComputerMoveService {
           }
         }
       }
-      if (iRow === 6 && iCol === 5) {
-        console.log('65 moves = ' + moves);
-      }
+
       return {
         move,
         moves
