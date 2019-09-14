@@ -127,8 +127,8 @@ export class AttackService {
        * required for a parallel attack
        */
       const arrowEdgesParallelAttackCheck = () => {
-        return (arrowBottomEdge.includes(isEnemy) && bottomEdgeProtector === isEmpty) ||
-              (arrowTopEdge.includes(isEnemy) && topEdgeParallelAttackProtector === isEmpty);
+        return (arrowBottomEdge && arrowBottomEdge.includes(isEnemy) && bottomEdgeProtector === isEmpty) ||
+              (arrowTopEdge && arrowTopEdge.includes(isEnemy) && topEdgeParallelAttackProtector === isEmpty);
       };
 
       /**
@@ -138,7 +138,7 @@ export class AttackService {
       const arrowEdgesCrossAttackCheck = () => {
         return transitCrossAttackCell === isEmpty &&
           bottomEdgeProtector === isEmpty &&
-          arrowBottomEdge.includes(isEnemy);
+          arrowBottomEdge && arrowBottomEdge.includes(isEnemy);
       };
 
       /**
@@ -152,7 +152,7 @@ export class AttackService {
         }
       };
 
-      return (arrowTip !== undefined && arrowTip.includes(isEnemy)) &&
+      return (arrowTip && arrowTip.includes(isEnemy)) &&
               arrowBottomEdge !== isEmpty && arrowTopEdge !== isEmpty && attackDirection();
     };
 
@@ -179,7 +179,7 @@ export class AttackService {
         sniper = topLeftSniperL2;
       }
       return initialSpot === isEmpty &&
-      (supporter !== undefined && supporter.includes(isFriend)) &&
+      (supporter && supporter.includes(isFriend)) &&
       (sniper === undefined || sniper.includes(isFriend));
     };
 
@@ -206,7 +206,7 @@ export class AttackService {
         sniper = topRightSniperL2;
       }
       return initialSpot === isEmpty &&
-      (supporter !== undefined && supporter.includes(isFriend)) &&
+      (supporter && supporter.includes(isFriend)) &&
       (sniper === undefined || sniper.includes(isFriend));
     };
 
@@ -292,22 +292,24 @@ export class AttackService {
        * pieces on its initial position
        */
       const parallelAttackEnemyFlankers = () => {
-        return bottomFlanker.includes(isEnemy) && topFlanker.includes(isEnemy);
+        return (bottomFlanker && topFlanker) &&
+                bottomFlanker.includes(isEnemy) &&
+                topFlanker.includes(isEnemy);
       };
 
       /**
        * Making a counter attack by parallel baiting the piece under attack
        */
       const parallelAttackBaitFired = () => {
-        return bottomFlanker.includes(isEnemy) && topFlanker === isEmpty ||
-                bottomFlanker === isEmpty && topFlanker.includes(isEnemy);
+        return bottomFlanker && bottomFlanker.includes(isEnemy) && topFlanker === isEmpty ||
+                bottomFlanker === isEmpty && topFlanker && topFlanker.includes(isEnemy);
       };
 
       /**
        * Making a counter attack by cross baiting the piece under attack
        */
       const crossAttackBaitFired = () => {
-        return topFlanker.includes(isEnemy) && topFlankerGuard !== isEmpty;
+        return topFlanker && topFlanker.includes(isEnemy) && topFlankerGuard !== isEmpty;
       };
 
       /**
@@ -315,7 +317,7 @@ export class AttackService {
        * pieces on its initial position
        */
       const parallelAttackFriendlyFlankers = () => {
-        return bottomFlanker.includes(isFriend) && topFlanker.includes(isFriend) &&
+        return bottomFlanker && bottomFlanker.includes(isFriend) && topFlanker && topFlanker.includes(isFriend) &&
               (bottomFlankerGuard === undefined || bottomFlankerGuard.includes(isFriend)) &&
               (topFlankerGuard === undefined || topFlankerGuard.includes(isFriend));
       };
@@ -325,10 +327,12 @@ export class AttackService {
        * piece and and enemy piece on its initial position
        */
       const parallelAttackMixedFlankers = () => {
-        return (bottomFlanker.includes(isEnemy) && topFlanker.includes(isFriend) &&
-        (topFlankerGuard === undefined || topFlankerGuard.includes(isFriend))) ||
-      (bottomFlanker.includes(isFriend) && topFlanker.includes(isEnemy) &&
-        (bottomFlankerGuard === undefined || bottomFlankerGuard.includes(isFriend)));
+        return (bottomFlanker && bottomFlanker.includes(isEnemy) &&
+                topFlanker && topFlanker.includes(isFriend) &&
+                (topFlankerGuard === undefined || topFlankerGuard.includes(isFriend))) ||
+                (bottomFlanker && bottomFlanker.includes(isFriend) &&
+                topFlanker && topFlanker.includes(isEnemy) &&
+                (bottomFlankerGuard === undefined || bottomFlankerGuard.includes(isFriend)));
       };
 
       /**
@@ -337,9 +341,9 @@ export class AttackService {
        */
       const crossTransitAndFinalPosCheck = () => {
         return transitCell === isEmpty && (
-          (bottomEdgeProtector === isEmpty && arrowBottomEdge.includes(isEnemy)) ||
-          (crossFireSeries.includes(isEnemy) && crossFireSeriesGuard === isEmpty) ||
-          (crossFireTop.includes(isEnemy) && crossFireTopGuard === isEmpty)
+          (bottomEdgeProtector === isEmpty && arrowBottomEdge && arrowBottomEdge.includes(isEnemy)) ||
+          (crossFireSeries && crossFireSeries.includes(isEnemy) && crossFireSeriesGuard === isEmpty) ||
+          (crossFireTop && crossFireTop.includes(isEnemy) && crossFireTopGuard === isEmpty)
           );
       };
 
@@ -393,7 +397,7 @@ export class AttackService {
       const restictionCheck = () => {
         let crossCaptureSpy: boolean;
 
-        if (temptedPiece.includes(kingSuffix)) {
+        if (temptedPiece && temptedPiece.includes(kingSuffix)) {
           if (direction === 'right') {
             crossCaptureSpy = moves.positiveDiagonalSpy(topLeftRow, topLeftCol, board, shared.playerPrefix);
           } else if (direction === 'left') {
@@ -404,9 +408,9 @@ export class AttackService {
         return true;
       };
 
-      return restictionCheck() && (topFlanker.includes(isFriend) && bottomFlanker === isEmpty) &&
+      return restictionCheck() && (topFlanker && topFlanker.includes(isFriend) && bottomFlanker === isEmpty) &&
             (topFlankerGuard === undefined || topFlankerGuard.includes(isFriend)) ||
-            (topFlanker === isEmpty && bottomFlanker.includes(isFriend)) &&
+            (topFlanker === isEmpty && bottomFlanker && bottomFlanker.includes(isFriend)) &&
             (bottomFlankerGuard === undefined || bottomFlankerGuard.includes(isFriend));
     };
 
@@ -475,7 +479,7 @@ export class AttackService {
        * for this skewed bait attack
        */
       const attackingFormationCheck = () => {
-        return (responder !== undefined && responder === 'isFriend') &&
+        return (responder && responder === 'isFriend') &&
           (sniperGuard === undefined || sniper.includes(isFriend)) &&
           (sniperGuard === undefined || sniperGuard.includes(isFriend));
       };
@@ -492,8 +496,8 @@ export class AttackService {
           crossCaptureSpy = moves.negativeDiagonalSpy(topRightRow, topRightCol, board, shared.playerPrefix);
         }
 
-        if (shortArmTop.includes(kingSuffix)) {
-          return !crossCaptureSpy && (restrictorCell.includes(isEnemy) ||
+        if (shortArmTop && shortArmTop.includes(kingSuffix)) {
+          return !crossCaptureSpy && (restrictorCell && restrictorCell.includes(isEnemy) ||
                 restrictorCell.includes(isFriend) &&
                 (restrictorCellGuard === undefined || restrictorCellGuard.includes(isFriend)));
         }
@@ -504,9 +508,9 @@ export class AttackService {
        * Checks for the enemy pieces formation necessary for a skewed bait attack
        */
       const enemyFormationCheck = () => {
-        if (shortArmTop !== undefined && shortArmTop.includes(isEnemy)) {
-          const normalPieceRequirement = ((longArmTop !== undefined && longArmTop.includes(isEnemy)) && longArmGuard === isEmpty ) ||
-            (seriesCrossFire !== undefined && seriesCrossFire.includes(isEnemy) && seriesCrossFireGuard === isEmpty);
+        if (shortArmTop && shortArmTop.includes(isEnemy)) {
+          const normalPieceRequirement = ((longArmTop && longArmTop.includes(isEnemy)) && longArmGuard === isEmpty ) ||
+            (seriesCrossFire && seriesCrossFire.includes(isEnemy) && seriesCrossFireGuard === isEmpty);
           if (shortArmTop === isEnemy) {
             return normalPieceRequirement;
           } else {
@@ -517,7 +521,7 @@ export class AttackService {
       };
 
       return transitCell === isEmpty &&
-            (baitSpoilerCell !== undefined && (baitSpoilerCell === isEmpty || baitSpoilerCell.includes(isFriend))) &&
+            (baitSpoilerCell && (baitSpoilerCell === isEmpty || baitSpoilerCell.includes(isFriend))) &&
             attackingFormationCheck() && enemyFormationCheck();
     };
 

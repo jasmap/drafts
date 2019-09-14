@@ -370,66 +370,70 @@ export class MovesAnalyserService {
       const bottomRight = this.bottomRightCell(finalRow, finalCol, board, enemyPrefix);
       const topRight = this.topRightCell(finalRow, finalCol, board, enemyPrefix, initRow, initCol);
 
-      const opponentKings = [];
+      /**
+       * Checks if the moving piece will be threatened by an enemy piece on its
+       * landing position
+       */
+      const threatFromKing = () => {
+        const opponentKings = [];
 
-      for (const poker of this.shared.playerPokers) {
-        if (poker.isKing) {
-          opponentKings.push(poker);
-        }
-      }
-
-      if  (opponentKings.length > 0) {
-        const positiveMagic = 9;
-        const negativeMagic = 11;
-        let kingNum: number;
-        let delta: number;
-        let kingRow: number;
-        let kingCol: number;
-
-        const pieceNum: number = finalRow === 0 ? +`${finalCol}` : +`${finalRow}${finalCol}`;
-        for (const king of opponentKings) {
-          [kingRow, kingCol] = king.currentPosition();
-          if (kingRow !== 0) {
-            kingNum = +`${kingRow}${kingCol}`;
-          } else {
-            kingNum = +`${kingCol}`;
-          }
-
-          delta = Math.abs(kingNum - pieceNum);
-          if (delta % positiveMagic === 0) {
-            if (!this.positiveDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.playerPrefix)) {
-              this.board.board[finalRow][finalCol].setAttribute('id', this.shared.playerPrefix);
-              if (this.positiveDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.playerPrefix)) {
-                this.board.board[finalRow][finalCol].removeAttribute('id');
-                return true;
-              }
-              this.board.board[finalRow][finalCol].removeAttribute('id');
-            }
-          } else if (delta % negativeMagic === 0) {
-            if (!this.negativeDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.playerPrefix)) {
-              this.board.board[finalRow][finalCol].setAttribute('id', this.shared.playerPrefix);
-              if (this.negativeDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.playerPrefix)) {
-                this.board.board[finalRow][finalCol].removeAttribute('id');
-                return true;
-              }
-              this.board.board[finalRow][finalCol].removeAttribute('id');
-            }
+        // Check if there are any enemy kings in the game
+        for (const poker of this.shared.playerPokers) {
+          if (poker.isKing) {
+            opponentKings.push(poker);
           }
         }
+
+        if  (opponentKings.length > 0) {
+          const positiveMagic = 9;
+          const negativeMagic = 11;
+          let kingNum: number;
+          let delta: number;
+          let kingRow: number;
+          let kingCol: number;
+
+          const pieceNum: number = finalRow === 0 ? +`${finalCol}` : +`${finalRow}${finalCol}`;
+          for (const king of opponentKings) {
+            [kingRow, kingCol] = king.currentPosition();
+            if (kingRow !== 0) {
+              kingNum = +`${kingRow}${kingCol}`;
+            } else {
+              kingNum = +`${kingCol}`;
+            }
+
+            delta = Math.abs(kingNum - pieceNum);
+            if (delta % positiveMagic === 0) {
+              if (!this.positiveDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.computerPrefix)) {
+                this.board.board[finalRow][finalCol].setAttribute('id', this.shared.computerPrefix);
+                if (this.positiveDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.computerPrefix)) {
+                  this.board.board[finalRow][finalCol].removeAttribute('id');
+                  return true;
+                }
+                this.board.board[finalRow][finalCol].removeAttribute('id');
+              }
+            } else if (delta % negativeMagic === 0) {
+              if (!this.negativeDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.computerPrefix)) {
+                this.board.board[finalRow][finalCol].setAttribute('id', this.shared.computerPrefix);
+                if (this.negativeDiagonalSpy(kingRow, kingCol, this.board.board, this.shared.computerPrefix)) {
+                  this.board.board[finalRow][finalCol].removeAttribute('id');
+                  return true;
+                }
+                this.board.board[finalRow][finalCol].removeAttribute('id');
+              }
+            }
+          }
+        }
+        return false;
+      };
+
+      if (threatFromKing()) {
+        return true;
       }
 
-      // if (initRow === 7 && initCol === 4) {
-      //   console.log(`Cell ${finalRow}${finalCol}`);
-      //   console.log((topLeft === this.isEmpty && (bottomRight !== undefined && bottomRight.includes(this.isEnemy))))
-      //   console.log((topRight === this.isEmpty && (bottomLeft !== undefined && bottomLeft.includes(this.isEnemy))))
-      //   console.log((bottomRight === this.isEmpty && (topLeft !== undefined && topLeft.includes(this.isEnemy))))
-      //   console.log((bottomLeft === this.isEmpty && (topRight !== undefined && topRight.includes(this.isEnemy))))
-      // }
-
-      if ((topLeft === this.isEmpty && (bottomRight !== undefined && bottomRight.includes(this.isEnemy))) ||
-          (topRight === this.isEmpty && (bottomLeft !== undefined && bottomLeft.includes(this.isEnemy))) ||
-          (bottomRight === this.isEmpty && (topLeft !== undefined && topLeft.includes(this.isEnemy))) ||
-          (bottomLeft === this.isEmpty && (topRight !== undefined && topRight.includes(this.isEnemy)))) {
+      if ((topLeft === this.isEmpty && (bottomRight && bottomRight.includes(this.isEnemy))) ||
+          (topRight === this.isEmpty && (bottomLeft && bottomLeft.includes(this.isEnemy))) ||
+          (bottomRight === this.isEmpty && (topLeft && topLeft.includes(this.isEnemy))) ||
+          (bottomLeft === this.isEmpty && (topRight && topRight.includes(this.isEnemy)))) {
           // The piece will be captured if it makes this move
           return true;
       } else {
@@ -454,29 +458,29 @@ export class MovesAnalyserService {
           const bottomRightSniperS = this.bottomRightSniperSCell(finalRow, finalCol, board, enemyPrefix);
           const topLeftSniperS = this.topLeftSniperSCell(finalRow, finalCol, board, enemyPrefix);
 
-          if (((bottomRightSniperL1 !== undefined && rightSibling !== undefined) &&
+          if (((bottomRightSniperL1 && rightSibling) &&
               (bottomRightSniperL1.includes(this.isEnemy) && rightSibling.includes(this.isFriend) && topRight === this.isEmpty)) ||
-              ((bottomLeftSniperL1 !== undefined && leftSibling !== undefined) &&
+              ((bottomLeftSniperL1 && leftSibling) &&
               (bottomLeftSniperL1.includes(this.isEnemy) && leftSibling.includes(this.isFriend) && topLeft === this.isEmpty)) ||
-              ((topLeftSniperL1 !== undefined && rightSibling !== undefined) &&
+              ((topLeftSniperL1 && rightSibling) &&
               (topLeftSniperL1.includes(this.isEnemy) && rightSibling.includes(this.isFriend) && bottomRight === this.isEmpty)) ||
-              ((topRightSniperL1 !== undefined && leftSibling !== undefined) &&
+              ((topRightSniperL1 && leftSibling) &&
               (topRightSniperL1.includes(this.isEnemy) && leftSibling.includes(this.isFriend) && bottomLeft === this.isEmpty)) ||
-              ((bottomRightSniperL2 !== undefined && bottomSibling !== undefined) &&
+              ((bottomRightSniperL2 && bottomSibling) &&
               (bottomRightSniperL2.includes(this.isEnemy) && bottomSibling.includes(this.isFriend) && bottomLeft === this.isEmpty)) ||
-              ((bottomLeftSniperL2 !== undefined && bottomSibling !== undefined) &&
+              ((bottomLeftSniperL2 && bottomSibling) &&
               (bottomLeftSniperL2.includes(this.isEnemy) && bottomSibling.includes(this.isFriend) && bottomRight === this.isEmpty)) ||
-              ((topRightSniperL2 !== undefined && topSibling !== undefined) &&
+              ((topRightSniperL2 && topSibling) &&
               (topRightSniperL2.includes(this.isEnemy) && topSibling.includes(this.isFriend) && topLeft === this.isEmpty)) ||
-              ((topLeftSniperL2 !== undefined && topSibling !== undefined) &&
+              ((topLeftSniperL2 && topSibling) &&
               (topLeftSniperL2.includes(this.isEnemy) && topSibling.includes(this.isFriend) && topRight === this.isEmpty)) ||
-              ((topRightSniperS !== undefined && farTopRight !== undefined) &&
+              ((topRightSniperS && farTopRight) &&
               (topRightSniperS.includes(this.isEnemy) && farTopRight.includes(this.isFriend) && topRight === this.isEmpty)) ||
-              ((bottomLeftSniperS !== undefined && farBottomLeft !== undefined) &&
+              ((bottomLeftSniperS && farBottomLeft) &&
               (bottomLeftSniperS.includes(this.isEnemy) && farBottomLeft.includes(this.isFriend) && bottomLeft === this.isEmpty)) ||
-              ((bottomRightSniperS !== undefined && farBottomRight !== undefined) &&
+              ((bottomRightSniperS && farBottomRight) &&
               (bottomRightSniperS.includes(this.isEnemy) && farBottomRight.includes(this.isFriend) && bottomRight === this.isEmpty)) ||
-              ((topLeftSniperS !== undefined && farTopLeft !== undefined) &&
+              ((topLeftSniperS && farTopLeft) &&
               (topLeftSniperS.includes(this.isEnemy) && farTopLeft.includes(this.isFriend) && topLeft === this.isEmpty))) {
               // This move will leave friend to be captured
               return true;
