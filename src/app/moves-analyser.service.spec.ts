@@ -115,7 +115,7 @@ describe('MovesAnalyserService', () => {
     sharedService.computerTurn = true;
     sharedService.computerPokers = [mainPiece, computeriece1, computerPiece2];
     compMoves.computerMove();
-    expect(compMoves.evasiveMoves).toEqual(['0. 1:1. 2']);
+    expect(compMoves.legalMovesBank).toEqual(['0. 1:1. 2']);
   });
 
 });

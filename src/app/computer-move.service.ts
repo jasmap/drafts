@@ -135,6 +135,9 @@ export class ComputerMoveService {
      * Tries to save a friendly piece which is under fire, either by moving or
      * protecting the endangered piece.
      *
+     * It does that by populating a priority moves array, with indices of moves that can evade or
+     * block the intended capture.
+     *
      * @param threatsBank - an array of enemy moves, that are capable of capturing friendly pieces
      * @param availableMoves - an array of legal moves at the disposal of friendly pieces
      */
@@ -255,8 +258,8 @@ export class ComputerMoveService {
 
           if (this.evasiveMoves.length > 0) {
             this.monkeyStyle(this.evasiveMoves);
+            return;
           } else {
-            // All attempted evasive moves will result in a capture, so just play any evasive move
             this.monkeyStyle(evasiveMovesCopy);
           }
 
